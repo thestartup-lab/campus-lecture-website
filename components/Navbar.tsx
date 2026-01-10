@@ -11,6 +11,7 @@ export default function Navbar() {
 
   const navItems = [
     { name: '首頁', href: '/' },
+    { name: '緣起', href: '/about' },
     { name: '專欄', href: '/blog' },
     { name: '講師', href: '/lecturers' },
     { name: '邀約', href: '/invitation' },
