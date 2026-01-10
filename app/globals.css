@@ -1,0 +1,365 @@
+@import "tailwindcss";
+
+/* ========================================
+   Modern Editorial / Print Style
+   現代社論印刷風格
+   ======================================== */
+
+:root {
+  /* 單色調配色 Monochrome */
+  --color-paper: #FAFAF8;      /* 紙張米白色 */
+  --color-paper-dark: #F5F5F0; /* 較深的紙張色 */
+  --color-ink: #000000;        /* 純黑墨水色 */
+  --color-ink-light: #333333;  /* 淺黑色 */
+  --color-ink-muted: #666666;  /* 灰色 */
+  --color-border: #000000;     /* 邊框色 */
+  
+  /* 硬陰影 Hard Shadow */
+  --shadow-hard: 4px 4px 0px 0px rgba(0,0,0,1);
+  --shadow-hard-sm: 2px 2px 0px 0px rgba(0,0,0,1);
+  --shadow-hard-lg: 6px 6px 0px 0px rgba(0,0,0,1);
+  --shadow-hard-hover: 6px 6px 0px 0px rgba(0,0,0,1);
+  
+  /* 字體 */
+  --font-serif: var(--font-playfair), 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-sans: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+@theme inline {
+  --color-paper: #FAFAF8;
+  --color-paper-dark: #F5F5F0;
+  --color-ink: #000000;
+  --color-ink-light: #333333;
+  --color-ink-muted: #666666;
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+}
+
+/* 基礎樣式 */
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.7;
+  letter-spacing: -0.01em;
+}
+
+/* 標題字體 - Serif */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* ========================================
+   工具類別 Utility Classes
+   ======================================== */
+
+/* 背景色 */
+.bg-paper {
+  background-color: var(--color-paper);
+}
+
+.bg-paper-dark {
+  background-color: var(--color-paper-dark);
+}
+
+/* 字體 */
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+/* 硬陰影 Hard Shadows */
+.shadow-hard {
+  box-shadow: var(--shadow-hard);
+}
+
+.shadow-hard-sm {
+  box-shadow: var(--shadow-hard-sm);
+}
+
+.shadow-hard-lg {
+  box-shadow: var(--shadow-hard-lg);
+}
+
+/* 粗邊框卡片 */
+.card-editorial {
+  background-color: white;
+  border: 2px solid var(--color-ink);
+  box-shadow: var(--shadow-hard);
+  transition: all 0.2s ease;
+}
+
+.card-editorial:hover {
+  box-shadow: var(--shadow-hard-hover);
+  transform: translate(-2px, -2px);
+}
+
+/* 編輯風格按鈕 */
+.btn-editorial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  border: 2px solid var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: var(--shadow-hard-sm);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-editorial:hover {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hard);
+}
+
+.btn-editorial-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  background-color: transparent;
+  color: var(--color-ink);
+  border: 2px solid var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-editorial-outline:hover {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  box-shadow: var(--shadow-hard-sm);
+  transform: translate(-2px, -2px);
+}
+
+/* 編輯風格輸入框 */
+.input-editorial {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background-color: white;
+  color: var(--color-ink);
+  border: 2px solid var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  transition: all 0.15s ease;
+}
+
+.input-editorial:focus {
+  outline: none;
+  box-shadow: var(--shadow-hard-sm);
+  transform: translate(-2px, -2px);
+}
+
+.input-editorial::placeholder {
+  color: var(--color-ink-muted);
+}
+
+/* 講師照片容器 - 黑白濾鏡 + 粗邊框 */
+.photo-editorial {
+  position: relative;
+  border: 3px solid var(--color-ink);
+  box-shadow: var(--shadow-hard);
+  overflow: hidden;
+  background-color: var(--color-paper-dark);
+}
+
+.photo-editorial img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(100%) contrast(1.1);
+  transition: filter 0.3s ease;
+}
+
+.photo-editorial:hover img {
+  filter: grayscale(0%) contrast(1);
+}
+
+/* 照片容器 - 圓形版本 */
+.photo-editorial-round {
+  position: relative;
+  border: 3px solid var(--color-ink);
+  border-radius: 50%;
+  box-shadow: var(--shadow-hard);
+  overflow: hidden;
+  background-color: var(--color-paper-dark);
+}
+
+.photo-editorial-round img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(100%) contrast(1.1);
+  transition: filter 0.3s ease;
+}
+
+.photo-editorial-round:hover img {
+  filter: grayscale(0%) contrast(1);
+}
+
+/* 分隔線 */
+.divider-editorial {
+  height: 2px;
+  background-color: var(--color-ink);
+  margin: 2rem 0;
+}
+
+.divider-editorial-thin {
+  height: 1px;
+  background-color: var(--color-ink);
+  margin: 1rem 0;
+}
+
+/* 標籤 Tag */
+.tag-editorial {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background-color: transparent;
+  color: var(--color-ink);
+  border: 1px solid var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease;
+}
+
+.tag-editorial:hover {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+}
+
+/* 引用區塊 */
+.blockquote-editorial {
+  position: relative;
+  padding: 2rem;
+  padding-left: 3rem;
+  border-left: 4px solid var(--color-ink);
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.blockquote-editorial::before {
+  content: '"';
+  position: absolute;
+  left: 0.5rem;
+  top: 0.5rem;
+  font-size: 4rem;
+  font-family: var(--font-serif);
+  color: var(--color-ink);
+  opacity: 0.2;
+  line-height: 1;
+}
+
+/* 章節標題裝飾 */
+.section-title {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  width: 3rem;
+  height: 3px;
+  background-color: var(--color-ink);
+}
+
+/* ========================================
+   動畫 Animations
+   ======================================== */
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 手繪風格圖示效果 */
+.icon-sketch {
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 選取文字顏色 */
+::selection {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+}
+
+/* 滾動條樣式 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-paper);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-ink);
+  border: 2px solid var(--color-paper);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-light);
+}

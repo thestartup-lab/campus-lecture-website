@@ -1,0 +1,71 @@
+import type { Metadata } from "next";
+import { Playfair_Display, Inter } from "next/font/google";
+import Script from "next/script";
+import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import FloatingNewsletter from "@/components/FloatingNewsletter";
+import Providers from "@/components/Providers";
+
+// Serif 字體 - 標題使用
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+// Sans-serif 字體 - 內文使用
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+export const metadata: Metadata = {
+  title: "校園講座計劃 - 讓教育更有溫度",
+  description: "連結專業講師與校園，為學生帶來啟發性的學習體驗。我們相信，每一場講座都能點燃學習的熱情，開啟未來的可能。",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="zh-TW" suppressHydrationWarning>
+      <head>
+        {/* 抑制 TipTap AbortError 在開發模式的錯誤覆蓋 */}
+        <Script id="suppress-abort-error" strategy="beforeInteractive">{`
+          (function() {
+            if (typeof window !== 'undefined') {
+              window.addEventListener('error', function(e) {
+                if (e.message && (e.message.includes('signal is aborted') || e.message.includes('AbortError'))) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return false;
+                }
+              }, true);
+              window.addEventListener('unhandledrejection', function(e) {
+                if (e.reason && (e.reason.name === 'AbortError' || String(e.reason).includes('signal is aborted'))) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return false;
+                }
+              }, true);
+            }
+          })();
+        `}</Script>
+      </head>
+      <body
+        className={`${playfair.variable} ${inter.variable} font-sans antialiased bg-paper text-black`}
+      >
+        <Providers>
+          <Navbar />
+          {children}
+          <Footer />
+          <FloatingNewsletter />
+        </Providers>
+      </body>
+    </html>
+  );
+}
