@@ -149,63 +149,81 @@ export default async function BlogPage() {
               <Link
                 key={article.id}
                 href={`/blog/${article.id}`}
-                className="group card-editorial"
+                className="group relative block bg-white border-[3px] border-black rounded-[2px] overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 hover:-translate-y-1"
               >
-                {/* Image or Placeholder */}
-                <div className="relative aspect-[4/3] bg-paper-dark border-b-2 border-black overflow-hidden">
+                {/* Image Area - Full Bleed */}
+                <div className="relative h-52 overflow-hidden">
                   {article.image_url ? (
                     <img
                       src={article.image_url}
                       alt={article.title}
-                      className="w-full h-full object-cover grayscale contrast-110 group-hover:grayscale-0 transition-all duration-500"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      style={{
+                        filter: 'grayscale(100%) contrast(110%) brightness(95%)'
+                      }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-7xl grayscale group-hover:grayscale-0 transition-all duration-500">📰</span>
+                    <div 
+                      className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"
+                      style={{
+                        filter: 'grayscale(100%) contrast(110%) brightness(95%)'
+                      }}
+                    >
+                      <span className="text-8xl opacity-30">📰</span>
                     </div>
                   )}
-                  {/* Number Badge */}
-                  <div className="absolute top-4 right-4 font-serif text-4xl font-bold text-black/10">
-                    {String(index + 1).padStart(2, '0')}
-                  </div>
-                  {/* Category Badge */}
-                  <div className="absolute bottom-4 left-4">
-                    <span className="tag-editorial bg-paper">
+                  
+                  {/* Noise Texture Overlay */}
+                  <div 
+                    className="absolute inset-0 opacity-[0.15] pointer-events-none mix-blend-overlay"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
+                    }}
+                  />
+                  
+                  {/* Category Badge - Bottom Left on Image */}
+                  <div className="absolute bottom-3 left-3 z-10">
+                    <span className="inline-block px-3 py-1.5 bg-black text-white text-xs font-bold uppercase tracking-widest">
                       {article.category}
                     </span>
                   </div>
                 </div>
 
+                {/* Number Badge - Overlapping Position */}
+                <div className="absolute right-4 top-44 z-20 font-serif text-6xl font-black text-gray-200 leading-none select-none">
+                  {String(index + 1).padStart(2, '0')}
+                </div>
+
                 {/* Content */}
-                <div className="p-6">
+                <div className="relative p-6 pt-5 bg-white">
                   {/* Title */}
-                  <h3 className="font-serif text-xl font-bold text-black mb-3 group-hover:underline underline-offset-4 decoration-2 line-clamp-2">
+                  <h3 className="font-serif text-xl font-bold text-black mb-3 leading-tight line-clamp-2 group-hover:underline underline-offset-4 decoration-2">
                     {article.title}
                   </h3>
 
                   {/* Excerpt */}
-                  <p className="text-ink-muted text-sm mb-4 line-clamp-3 leading-relaxed">
+                  <p className="text-black/60 text-sm mb-4 line-clamp-3 leading-relaxed">
                     {article.excerpt}
                   </p>
 
                   {/* Meta Info */}
-                  <div className="flex items-center justify-between text-xs uppercase tracking-wider text-ink-muted">
-                    <div className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
+                  <div className="flex items-center justify-between text-xs uppercase tracking-wider text-black/40 font-medium">
+                    <div className="flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5" strokeWidth={1.5} />
                       <span>{article.author}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5" strokeWidth={1.5} />
                       <span>{article.date}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Read More */}
-                <div className="px-6 py-4 border-t-2 border-black bg-paper group-hover:bg-black group-hover:text-paper transition-colors">
-                  <span className="flex items-center justify-between text-sm uppercase tracking-wider font-medium">
+                <div className="px-6 py-4 border-t-2 border-black bg-white group-hover:bg-black group-hover:text-white transition-colors">
+                  <span className="flex items-center justify-between text-sm uppercase tracking-widest font-bold">
                     閱讀全文
-                    <ArrowUpRight className="w-4 h-4" strokeWidth={1.5} />
+                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" strokeWidth={2} />
                   </span>
                 </div>
               </Link>
