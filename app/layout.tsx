@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingNewsletter from "@/components/FloatingNewsletter";
+import NewsletterModal from "@/components/NewsletterModal";
 import Providers from "@/components/Providers";
 
 // Serif 字體 - 標題使用
@@ -64,6 +65,7 @@ export default function RootLayout({
           {children}
           <Footer />
           <FloatingNewsletter />
+          <NewsletterModal />
         </Providers>
       </body>
     </html>
