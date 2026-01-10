@@ -78,7 +78,7 @@ export default function RichTextEditorCore({ content, onChange, placeholder = '�
   // 當外部 content 變化時同步到編輯器
   useEffect(() => {
     if (editor && !isDestroying.current && content !== editor.getHTML()) {
-      editor.commands.setContent(content, false)
+      editor.commands.setContent(content, { emitUpdate: false })
     }
   }, [content, editor])
 
