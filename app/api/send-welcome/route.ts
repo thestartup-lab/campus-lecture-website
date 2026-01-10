@@ -1,8 +1,6 @@
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json()
@@ -13,6 +11,18 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // 檢查 API Key 是否存在
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY 未設定')
+      return NextResponse.json(
+        { error: 'Email 服務未設定' },
+        { status: 500 }
+      )
+    }
+
+    // 動態初始化 Resend
+    const resend = new Resend(process.env.RESEND_API_KEY)
 
     // 發送歡迎信
     const { data, error } = await resend.emails.send({
