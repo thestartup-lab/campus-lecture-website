@@ -1,12 +1,11 @@
 'use client'
 
-import { Mail, Send, X, ChevronDown, Check, AlertCircle } from 'lucide-react'
+import { Mail, Send, X, Check, AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 
 export default function FloatingNewsletter() {
   const [email, setEmail] = useState('')
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
+  const [isOpen, setIsOpen] = useState(true)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
 
@@ -71,8 +70,7 @@ export default function FloatingNewsletter() {
       setTimeout(() => {
         setStatus('idle')
         setMessage('')
-        setIsMinimized(true)
-        setIsExpanded(false)
+        setIsOpen(false)
       }, 3000)
     } catch (error) {
       console.error('訂閱錯誤:', error)
@@ -86,117 +84,89 @@ export default function FloatingNewsletter() {
     }
   }
 
-  if (isMinimized) {
+  // 最小化狀態 - 只顯示按鈕
+  if (!isOpen) {
     return (
-      <div className="fixed bottom-6 right-6 z-[60]">
+      <div className="fixed bottom-6 right-6 z-[9999]">
         <button
-          onClick={() => setIsMinimized(false)}
-          className="flex items-center gap-2 bg-black text-paper px-4 py-3 border-2 border-black shadow-hard hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-hard-lg transition-all"
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="flex items-center gap-2 bg-black text-white px-5 py-3 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer"
         >
           <Mail className="w-5 h-5" strokeWidth={1.5} />
-          <span className="text-sm font-medium uppercase tracking-wider">Subscribe</span>
+          <span className="text-sm font-bold uppercase tracking-wider">訂閱電子報</span>
         </button>
       </div>
     )
   }
 
+  // 展開狀態 - 顯示完整表單
   return (
-    <div className="fixed bottom-6 right-6 z-[60] w-80">
-      {/* 浮動卡片 */}
-      <div className="bg-black text-paper border-2 border-black shadow-hard">
+    <div className="fixed bottom-6 right-6 z-[9999] w-80">
+      <div className="bg-black text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]">
         {/* 標題列 */}
-        <div 
-          className="flex items-center justify-between p-4 cursor-pointer border-b border-paper/20"
-          onClick={() => setIsExpanded(!isExpanded)}
-        >
+        <div className="flex items-center justify-between p-4 border-b border-white/20">
           <div className="flex items-center gap-3">
             <Mail className="w-5 h-5" strokeWidth={1.5} />
-            <div>
-              <h3 className="font-serif text-lg font-bold">電子報</h3>
-            </div>
+            <h3 className="font-serif text-lg font-bold">訂閱電子報</h3>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setIsExpanded(!isExpanded)
-              }}
-              className="p-1 hover:bg-paper/10 transition-colors"
-            >
-              <ChevronDown 
-                className={`w-5 h-5 transition-transform duration-300 ${
-                  isExpanded ? 'rotate-180' : ''
-                }`}
-                strokeWidth={1.5}
-              />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setIsMinimized(true)
-                setIsExpanded(false)
-              }}
-              className="p-1 hover:bg-paper/10 transition-colors"
-            >
-              <X className="w-5 h-5" strokeWidth={1.5} />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="p-2 hover:bg-white/10 transition-colors rounded cursor-pointer"
+            aria-label="關閉"
+          >
+            <X className="w-5 h-5" strokeWidth={1.5} />
+          </button>
         </div>
 
-        {/* 展開內容 */}
-        <div 
-          className={`transition-all duration-300 ease-in-out overflow-hidden ${
-            isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div className="p-4">
-            <p className="text-sm text-paper/70 mb-4">
-              訂閱以獲取最新講座資訊
-            </p>
+        {/* 表單內容 */}
+        <div className="p-4">
+          <p className="text-sm text-white/70 mb-4">
+            訂閱以獲取最新講座資訊與教育觀點
+          </p>
 
-            {/* 表單 */}
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                required
-                disabled={status === 'loading'}
-                className="w-full px-4 py-3 bg-paper text-black border-2 border-paper text-sm placeholder:text-ink-muted focus:outline-none disabled:opacity-50"
-              />
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+              disabled={status === 'loading'}
+              className="w-full px-4 py-3 bg-white text-black border-2 border-white text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-50"
+            />
 
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="w-full px-4 py-3 bg-paper text-black border-2 border-paper font-medium uppercase tracking-wider text-sm hover:bg-transparent hover:text-paper transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {status === 'loading' ? (
-                  <span className="animate-pulse">訂閱中...</span>
-                ) : (
-                  <>
-                    <span>立即訂閱</span>
-                    <Send className="w-4 h-4" strokeWidth={1.5} />
-                  </>
-                )}
-              </button>
-
-              {/* 狀態訊息 */}
-              {status === 'success' && message && (
-                <div className="p-3 border border-paper/30 flex items-center justify-center gap-2 text-sm animate-[slideIn_0.3s_ease-out]">
-                  <Check className="w-4 h-4" strokeWidth={1.5} />
-                  <span>{message}</span>
-                </div>
+            <button
+              type="submit"
+              disabled={status === 'loading'}
+              className="w-full px-4 py-3 bg-white text-black border-2 border-white font-bold uppercase tracking-wider text-sm hover:bg-transparent hover:text-white transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {status === 'loading' ? (
+                <span className="animate-pulse">訂閱中...</span>
+              ) : (
+                <>
+                  <span>立即訂閱</span>
+                  <Send className="w-4 h-4" strokeWidth={1.5} />
+                </>
               )}
+            </button>
 
-              {status === 'error' && message && (
-                <div className="p-3 border border-paper/30 flex items-center justify-center gap-2 text-sm animate-[shake_0.3s_ease-in-out]">
-                  <AlertCircle className="w-4 h-4" strokeWidth={1.5} />
-                  <span>{message}</span>
-                </div>
-              )}
-            </form>
-          </div>
+            {/* 狀態訊息 */}
+            {status === 'success' && message && (
+              <div className="p-3 border border-white/30 flex items-center justify-center gap-2 text-sm bg-white/10">
+                <Check className="w-4 h-4" strokeWidth={1.5} />
+                <span>{message}</span>
+              </div>
+            )}
+
+            {status === 'error' && message && (
+              <div className="p-3 border border-white/30 flex items-center justify-center gap-2 text-sm bg-white/10">
+                <AlertCircle className="w-4 h-4" strokeWidth={1.5} />
+                <span>{message}</span>
+              </div>
+            )}
+          </form>
         </div>
       </div>
     </div>

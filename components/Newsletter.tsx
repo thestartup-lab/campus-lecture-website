@@ -83,7 +83,7 @@ export default function Newsletter() {
   }
 
   return (
-    <section className="py-24 bg-black text-paper">
+    <section id="newsletter" className="py-24 bg-black text-paper scroll-mt-20">
       <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
         <div className="max-w-2xl mx-auto text-center">
           {/* Icon */}
