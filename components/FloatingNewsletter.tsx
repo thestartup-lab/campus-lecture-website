@@ -88,7 +88,7 @@ export default function FloatingNewsletter() {
 
   if (isMinimized) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-[60]">
         <button
           onClick={() => setIsMinimized(false)}
           className="flex items-center gap-2 bg-black text-paper px-4 py-3 border-2 border-black shadow-hard hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-hard-lg transition-all"
@@ -101,7 +101,7 @@ export default function FloatingNewsletter() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-80">
+    <div className="fixed bottom-6 right-6 z-[60] w-80">
       {/* 浮動卡片 */}
       <div className="bg-black text-paper border-2 border-black shadow-hard">
         {/* 標題列 */}
