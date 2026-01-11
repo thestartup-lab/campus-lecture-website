@@ -676,7 +676,7 @@ export default function DashboardPage() {
               }`}
             >
               <FileText className="w-4 h-4" strokeWidth={1.5} />
-              講座申請
+              講師申請
               <span className={`px-2 py-0.5 text-xs ${
                 activeTab === 'applications' ? 'bg-paper text-black' : 'bg-black text-paper'
               }`}>
@@ -836,8 +836,8 @@ export default function DashboardPage() {
               {/* Applications Header */}
               <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between bg-paper">
                 <div>
-                  <h2 className="font-serif text-lg font-bold text-black">講座邀約申請</h2>
-                  <p className="text-sm text-ink-muted">所有來自學校和機構的講座邀約</p>
+                  <h2 className="font-serif text-lg font-bold text-black">講師申請（舊版）</h2>
+                  <p className="text-sm text-ink-muted">來自 Supabase 的舊資料</p>
                 </div>
                 <button
                   onClick={fetchApplications}
