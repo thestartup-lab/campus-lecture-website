@@ -84,10 +84,30 @@ interface Testimonial {
   created_at: string
 }
 
+interface NotionApplication {
+  id: string
+  schoolName: string
+  contactName: string
+  contactEmail: string
+  contactPhone: string
+  contactTitle: string
+  preferredLecturer: string
+  lectureTopics: string[]
+  audienceType: string
+  audienceCount: number | null
+  preferredDates: string
+  lectureFormat: string
+  lectureContent: string
+  howDidYouHear: string[]
+  status: string
+  createdAt: string
+  url: string
+}
+
 export default function DashboardPage() {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'applications' | 'subscribers' | 'articles' | 'testimonials'>('articles')
+  const [activeTab, setActiveTab] = useState<'applications' | 'subscribers' | 'articles' | 'testimonials' | 'lectureRequests'>('articles')
   
   // Applications state
   const [applications, setApplications] = useState<Application[]>([])
@@ -110,6 +130,12 @@ export default function DashboardPage() {
   const [testimonialError, setTestimonialError] = useState<string | null>(null)
   const [togglingTestimonialId, setTogglingTestimonialId] = useState<string | null>(null)
   const [deletingTestimonialId, setDeletingTestimonialId] = useState<string | null>(null)
+
+  // Notion Lecture Requests state
+  const [lectureRequests, setLectureRequests] = useState<NotionApplication[]>([])
+  const [loadingLectureRequests, setLoadingLectureRequests] = useState(true)
+  const [lectureRequestError, setLectureRequestError] = useState<string | null>(null)
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
 
   // Article Modal state
   const [showArticleModal, setShowArticleModal] = useState(false)
@@ -221,6 +247,57 @@ export default function DashboardPage() {
     setLoadingTestimonials(false)
   }
 
+  // 獲取 Notion 講座邀約
+  const fetchLectureRequests = async () => {
+    setLoadingLectureRequests(true)
+    setLectureRequestError(null)
+
+    try {
+      const response = await fetch('/api/lecture-applications')
+      const result = await response.json()
+
+      if (result.success) {
+        setLectureRequests(result.data || [])
+      } else {
+        setLectureRequestError(result.error || '獲取失敗')
+      }
+    } catch (error) {
+      console.error('獲取講座邀約錯誤:', error)
+      setLectureRequestError('網路錯誤，請稍後再試')
+    }
+    setLoadingLectureRequests(false)
+  }
+
+  // 更新講座邀約狀態
+  const updateLectureRequestStatus = async (pageId: string, newStatus: string) => {
+    setUpdatingStatusId(pageId)
+
+    try {
+      const response = await fetch('/api/lecture-applications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pageId, status: newStatus }),
+      })
+      const result = await response.json()
+
+      if (result.success) {
+        // 更新本地狀態
+        setLectureRequests(prev =>
+          prev.map(req =>
+            req.id === pageId ? { ...req, status: newStatus } : req
+          )
+        )
+      } else {
+        alert(`更新失敗：${result.error}`)
+      }
+    } catch (error) {
+      console.error('更新狀態錯誤:', error)
+      alert('更新狀態時發生錯誤')
+    }
+
+    setUpdatingStatusId(null)
+  }
+
   // 切換回饋顯示狀態
   const toggleTestimonialApproval = async (id: string, currentStatus: boolean) => {
     setTogglingTestimonialId(id)
@@ -269,6 +346,7 @@ export default function DashboardPage() {
       fetchSubscribers()
       fetchArticles()
       fetchTestimonials()
+      fetchLectureRequests()
     }
   }, [user, profile])
 
@@ -535,11 +613,11 @@ export default function DashboardPage() {
           <div className="card-editorial p-6">
             <div className="flex items-center gap-3">
               <div className="p-3 border-2 border-black">
-                <FileText className="w-6 h-6 text-black" strokeWidth={1.5} />
+                <Calendar className="w-6 h-6 text-black" strokeWidth={1.5} />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wider text-ink-muted">講座申請</p>
-                <p className="font-serif text-2xl font-bold text-black">{applications.length}</p>
+                <p className="text-xs uppercase tracking-wider text-ink-muted">講座邀約</p>
+                <p className="font-serif text-2xl font-bold text-black">{lectureRequests.length}</p>
               </div>
             </div>
           </div>
@@ -549,9 +627,9 @@ export default function DashboardPage() {
                 <AlertCircle className="w-6 h-6 text-black" strokeWidth={1.5} />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wider text-ink-muted">待處理</p>
+                <p className="text-xs uppercase tracking-wider text-ink-muted">待處理邀約</p>
                 <p className="font-serif text-2xl font-bold text-black">
-                  {applications.filter(a => a.status === 'pending').length}
+                  {lectureRequests.filter(r => r.status === '待處理').length}
                 </p>
               </div>
             </div>
@@ -635,6 +713,22 @@ export default function DashboardPage() {
                 activeTab === 'testimonials' ? 'bg-paper text-black' : 'bg-black text-paper'
               }`}>
                 {testimonials.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab('lectureRequests')}
+              className={`flex-1 sm:flex-none px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border-l-2 border-black ${
+                activeTab === 'lectureRequests'
+                  ? 'bg-black text-paper'
+                  : 'bg-paper text-black hover:bg-black/5'
+              }`}
+            >
+              <Calendar className="w-4 h-4" strokeWidth={1.5} />
+              講座邀約
+              <span className={`px-2 py-0.5 text-xs ${
+                activeTab === 'lectureRequests' ? 'bg-paper text-black' : 'bg-black text-paper'
+              }`}>
+                {lectureRequests.length}
               </span>
             </button>
           </div>
@@ -1072,6 +1166,184 @@ export default function DashboardPage() {
                               <Trash2 className="w-4 h-4" strokeWidth={1.5} />
                             )}
                           </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : activeTab === 'lectureRequests' ? (
+            <>
+              {/* Lecture Requests Header */}
+              <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between bg-paper">
+                <div>
+                  <h2 className="font-serif text-lg font-bold text-black">講座邀約管理</h2>
+                  <p className="text-sm text-ink-muted">
+                    來自 Notion 的講座申請（待處理：{lectureRequests.filter(r => r.status === '待處理').length}）
+                  </p>
+                </div>
+                <button
+                  onClick={fetchLectureRequests}
+                  disabled={loadingLectureRequests}
+                  className="btn-editorial-outline text-sm"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loadingLectureRequests ? 'animate-spin' : ''}`} strokeWidth={1.5} />
+                  <span>重新整理</span>
+                </button>
+              </div>
+
+              {lectureRequestError && (
+                <div className="p-4 bg-red-50 border-b-2 border-black text-red-800">
+                  載入失敗：{lectureRequestError}
+                </div>
+              )}
+
+              {loadingLectureRequests ? (
+                <div className="p-12 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-black border-t-transparent mx-auto mb-4"></div>
+                  <p className="text-ink-muted text-sm uppercase tracking-wider">載入講座邀約中...</p>
+                </div>
+              ) : lectureRequests.length === 0 ? (
+                <div className="p-12 text-center">
+                  <Calendar className="w-12 h-12 text-ink-muted mx-auto mb-4" strokeWidth={1} />
+                  <p className="text-ink-muted">目前沒有任何講座邀約申請</p>
+                </div>
+              ) : (
+                <div className="divide-y-2 divide-black/10">
+                  {lectureRequests.map((request) => (
+                    <div key={request.id} className="px-6 py-5 hover:bg-paper-dark transition-colors">
+                      <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                        {/* 主要資訊 */}
+                        <div className="flex-1 min-w-0">
+                          {/* 標題列 */}
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 border-2 border-black">
+                              <Building2 className="w-5 h-5 text-black" strokeWidth={1.5} />
+                            </div>
+                            <div>
+                              <h3 className="font-serif text-lg font-bold text-black">
+                                {request.schoolName}
+                              </h3>
+                              <p className="text-sm text-ink-muted">
+                                {request.createdAt ? formatDateTime(request.createdAt) : ''}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* 詳細資訊網格 */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                            {/* 聯絡人 */}
+                            <div className="space-y-1">
+                              <p className="text-xs uppercase tracking-wider text-ink-muted font-medium">聯絡人</p>
+                              <div className="flex items-center gap-2 text-black">
+                                <User className="w-4 h-4 text-ink-muted" strokeWidth={1.5} />
+                                {request.contactName}
+                                {request.contactTitle && (
+                                  <span className="text-ink-muted">（{request.contactTitle}）</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-ink-muted">
+                                <Mail className="w-4 h-4" strokeWidth={1.5} />
+                                <a href={`mailto:${request.contactEmail}`} className="hover:text-black hover:underline">
+                                  {request.contactEmail}
+                                </a>
+                              </div>
+                              {request.contactPhone && (
+                                <div className="flex items-center gap-2 text-sm text-ink-muted">
+                                  <Phone className="w-4 h-4" strokeWidth={1.5} />
+                                  {request.contactPhone}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* 講座資訊 */}
+                            <div className="space-y-1">
+                              <p className="text-xs uppercase tracking-wider text-ink-muted font-medium">講座資訊</p>
+                              <div className="flex flex-wrap gap-1">
+                                {request.lectureTopics.map((topic, idx) => (
+                                  <span key={idx} className="px-2 py-0.5 text-xs bg-black text-paper">
+                                    {topic}
+                                  </span>
+                                ))}
+                              </div>
+                              <p className="text-sm text-black">
+                                聽眾：{request.audienceType}
+                                {request.audienceCount && ` (${request.audienceCount} 人)`}
+                              </p>
+                              <p className="text-sm text-black">
+                                形式：{request.lectureFormat}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* 日期與備註 */}
+                          <div className="space-y-2">
+                            {request.preferredDates && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Calendar className="w-4 h-4 text-ink-muted" strokeWidth={1.5} />
+                                <span className="text-ink-muted">希望日期：</span>
+                                <span className="text-black">{request.preferredDates}</span>
+                              </div>
+                            )}
+                            {request.preferredLecturer && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <User className="w-4 h-4 text-ink-muted" strokeWidth={1.5} />
+                                <span className="text-ink-muted">希望講師：</span>
+                                <span className="text-black">{request.preferredLecturer}</span>
+                              </div>
+                            )}
+                            {request.lectureContent && (
+                              <div className="text-sm">
+                                <span className="text-ink-muted">備註：</span>
+                                <span className="text-black">{request.lectureContent}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* 狀態與操作 */}
+                        <div className="flex flex-col gap-3 lg:w-48 flex-shrink-0">
+                          {/* 當前狀態 */}
+                          <div className="text-center lg:text-right">
+                            {getStatusBadge(
+                              request.status === '待處理' ? 'pending' :
+                              request.status === '處理中' ? 'reviewing' :
+                              request.status === '已確認' ? 'approved' :
+                              request.status === '已完成' ? 'completed' :
+                              request.status === '已取消' ? 'rejected' : 'pending'
+                            )}
+                          </div>
+
+                          {/* 狀態更新按鈕 */}
+                          <div className="flex flex-wrap gap-2 justify-center lg:justify-end">
+                            {['待處理', '處理中', '已確認', '已完成', '已取消'].map((status) => (
+                              <button
+                                key={status}
+                                onClick={() => updateLectureRequestStatus(request.id, status)}
+                                disabled={updatingStatusId === request.id || request.status === status}
+                                className={`px-2 py-1 text-xs border transition-colors ${
+                                  request.status === status
+                                    ? 'border-black bg-black text-paper cursor-default'
+                                    : 'border-black/30 hover:border-black hover:bg-black/5'
+                                } disabled:opacity-50`}
+                              >
+                                {updatingStatusId === request.id ? '...' : status}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Notion 連結 */}
+                          {request.url && (
+                            <a
+                              href={request.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-ink-muted hover:text-black underline text-center lg:text-right"
+                            >
+                              在 Notion 中開啟 →
+                            </a>
+                          )}
                         </div>
                       </div>
                     </div>

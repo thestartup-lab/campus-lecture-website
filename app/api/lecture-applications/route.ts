@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createLectureApplication, getLectureApplications, type LectureApplication } from '@/lib/notion'
+import { createLectureApplication, getLectureApplications, updateApplicationStatus, type LectureApplication } from '@/lib/notion'
 import { supabase } from '@/lib/supabase'
 
 // ========================================
@@ -138,19 +138,90 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined
     const limit = searchParams.get('limit')
 
-    // TODO: 加入管理員身份驗證
-    // 可以透過 Supabase Auth 來驗證是否為管理員
-
     const result = await getLectureApplications({
       status,
       limit: limit ? parseInt(limit, 10) : undefined,
     })
 
-    if (result.success) {
+    if (result.success && result.data) {
+      // 解析 Notion 頁面資料為更易用的格式
+      const applications = result.data.map((page: Record<string, unknown>) => {
+        const properties = page.properties as Record<string, unknown>
+        
+        // 輔助函數：安全取得屬性值
+        const getTitle = (prop: unknown): string => {
+          if (!prop || typeof prop !== 'object') return ''
+          const p = prop as { title?: Array<{ plain_text?: string }> }
+          return p.title?.[0]?.plain_text || ''
+        }
+        
+        const getRichText = (prop: unknown): string => {
+          if (!prop || typeof prop !== 'object') return ''
+          const p = prop as { rich_text?: Array<{ plain_text?: string }> }
+          return p.rich_text?.[0]?.plain_text || ''
+        }
+        
+        const getEmail = (prop: unknown): string => {
+          if (!prop || typeof prop !== 'object') return ''
+          const p = prop as { email?: string }
+          return p.email || ''
+        }
+        
+        const getPhone = (prop: unknown): string => {
+          if (!prop || typeof prop !== 'object') return ''
+          const p = prop as { phone_number?: string }
+          return p.phone_number || ''
+        }
+        
+        const getNumber = (prop: unknown): number | null => {
+          if (!prop || typeof prop !== 'object') return null
+          const p = prop as { number?: number }
+          return p.number || null
+        }
+        
+        const getSelect = (prop: unknown): string => {
+          if (!prop || typeof prop !== 'object') return ''
+          const p = prop as { select?: { name?: string } }
+          return p.select?.name || ''
+        }
+        
+        const getMultiSelect = (prop: unknown): string[] => {
+          if (!prop || typeof prop !== 'object') return []
+          const p = prop as { multi_select?: Array<{ name?: string }> }
+          return p.multi_select?.map(s => s.name || '') || []
+        }
+        
+        const getCreatedTime = (prop: unknown): string => {
+          if (!prop || typeof prop !== 'object') return ''
+          const p = prop as { created_time?: string }
+          return p.created_time || ''
+        }
+
+        return {
+          id: page.id,
+          schoolName: getTitle(properties['學校名稱']),
+          contactName: getRichText(properties['聯絡人']),
+          contactEmail: getEmail(properties['電子郵件']),
+          contactPhone: getPhone(properties['聯絡電話']),
+          contactTitle: getRichText(properties['職稱']),
+          preferredLecturer: getRichText(properties['希望講師']),
+          lectureTopics: getMultiSelect(properties['講座類型']),
+          audienceType: getRichText(properties['聽眾類型']),
+          audienceCount: getNumber(properties['預估人數']),
+          preferredDates: getRichText(properties['講座日期（期待）']),
+          lectureFormat: getSelect(properties['講座形式']),
+          lectureContent: getRichText(properties['講座內容']),
+          howDidYouHear: getMultiSelect(properties['得知管道']),
+          status: getSelect(properties['狀態']) || '待處理',
+          createdAt: getCreatedTime(properties['申請時間']),
+          url: (page as { url?: string }).url || '',
+        }
+      })
+
       return NextResponse.json({
         success: true,
-        data: result.data,
-        count: result.data?.length || 0,
+        data: applications,
+        count: applications.length,
       })
     } else {
       throw new Error(result.error)
@@ -160,6 +231,51 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: '查詢申請列表時發生錯誤',
+        details: error instanceof Error ? error.message : '未知錯誤',
+      },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * PATCH - 更新講座申請狀態
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { pageId, status } = body
+
+    if (!pageId || !status) {
+      return NextResponse.json(
+        { error: '缺少 pageId 或 status' },
+        { status: 400 }
+      )
+    }
+
+    const validStatuses = ['待處理', '處理中', '已確認', '已完成', '已取消']
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json(
+        { error: `無效的狀態，有效值：${validStatuses.join(', ')}` },
+        { status: 400 }
+      )
+    }
+
+    const result = await updateApplicationStatus(pageId, status)
+
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        message: '狀態更新成功',
+      })
+    } else {
+      throw new Error(result.error)
+    }
+  } catch (error) {
+    console.error('更新講座申請狀態 API 錯誤:', error)
+    return NextResponse.json(
+      {
+        error: '更新狀態時發生錯誤',
         details: error instanceof Error ? error.message : '未知錯誤',
       },
       { status: 500 }
