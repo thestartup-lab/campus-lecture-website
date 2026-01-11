@@ -107,7 +107,7 @@ interface NotionApplication {
 export default function DashboardPage() {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'applications' | 'subscribers' | 'articles' | 'testimonials' | 'lectureRequests'>('articles')
+  const [activeTab, setActiveTab] = useState<'subscribers' | 'articles' | 'testimonials' | 'lectureRequests'>('articles')
   
   // Applications state
   const [applications, setApplications] = useState<Application[]>([])
@@ -668,22 +668,6 @@ export default function DashboardPage() {
               </span>
             </button>
             <button
-              onClick={() => setActiveTab('applications')}
-              className={`flex-shrink-0 px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border-l-2 border-black ${
-                activeTab === 'applications'
-                  ? 'bg-black text-paper'
-                  : 'bg-paper text-black hover:bg-black/5'
-              }`}
-            >
-              <FileText className="w-4 h-4" strokeWidth={1.5} />
-              講師申請
-              <span className={`px-2 py-0.5 text-xs ${
-                activeTab === 'applications' ? 'bg-paper text-black' : 'bg-black text-paper'
-              }`}>
-                {applications.length}
-              </span>
-            </button>
-            <button
               onClick={() => setActiveTab('subscribers')}
               className={`flex-shrink-0 px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border-l-2 border-black ${
                 activeTab === 'subscribers'
@@ -828,127 +812,6 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   ))}
-                </div>
-              )}
-            </>
-          ) : activeTab === 'applications' ? (
-            <>
-              {/* Applications Header */}
-              <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between bg-paper">
-                <div>
-                  <h2 className="font-serif text-lg font-bold text-black">講師申請（舊版）</h2>
-                  <p className="text-sm text-ink-muted">來自 Supabase 的舊資料</p>
-                </div>
-                <button
-                  onClick={fetchApplications}
-                  disabled={loadingApps}
-                  className="btn-editorial-outline text-sm"
-                >
-                  <RefreshCw className={`w-4 h-4 ${loadingApps ? 'animate-spin' : ''}`} strokeWidth={1.5} />
-                  <span>重新整理</span>
-                </button>
-              </div>
-
-              {appError && (
-                <div className="p-4 bg-red-50 border-b-2 border-black text-red-800">
-                  載入失敗：{appError}
-                </div>
-              )}
-
-              {loadingApps ? (
-                <div className="p-12 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-black border-t-transparent mx-auto mb-4"></div>
-                  <p className="text-ink-muted text-sm uppercase tracking-wider">載入申請中...</p>
-                </div>
-              ) : applications.length === 0 ? (
-                <div className="p-12 text-center">
-                  <FileText className="w-12 h-12 text-ink-muted mx-auto mb-4" strokeWidth={1} />
-                  <p className="text-ink-muted">目前沒有任何講座申請</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-paper border-b-2 border-black">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
-                          申請單位
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
-                          聯絡人
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
-                          講座主題
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
-                          希望日期
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
-                          申請時間
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
-                          狀態
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y-2 divide-black/10">
-                      {applications.map((app) => (
-                        <tr key={app.id} className="hover:bg-paper-dark transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 border-2 border-black">
-                                <Building2 className="w-5 h-5 text-black" strokeWidth={1.5} />
-                              </div>
-                              <div>
-                                <p className="font-medium text-black">{app.school_name}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-black">
-                                <User className="w-4 h-4 text-ink-muted" strokeWidth={1.5} />
-                                {app.contact_person}
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-ink-muted">
-                                <Mail className="w-4 h-4" strokeWidth={1.5} />
-                                {app.email}
-                              </div>
-                              {app.phone && (
-                                <div className="flex items-center gap-2 text-sm text-ink-muted">
-                                  <Phone className="w-4 h-4" strokeWidth={1.5} />
-                                  {app.phone}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="text-black max-w-xs truncate" title={app.topic}>
-                              {app.topic}
-                            </p>
-                          </td>
-                          <td className="px-6 py-4">
-                            {app.date ? (
-                              <div className="flex items-center gap-2 text-black">
-                                <Calendar className="w-4 h-4 text-ink-muted" strokeWidth={1.5} />
-                                {formatDate(app.date)}
-                              </div>
-                            ) : (
-                              <span className="text-ink-muted">未指定</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2 text-sm text-ink-muted">
-                              <Clock className="w-4 h-4" strokeWidth={1.5} />
-                              {formatDateTime(app.created_at)}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            {getStatusBadge(app.status)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
                 </div>
               )}
             </>
