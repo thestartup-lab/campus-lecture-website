@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
 
     if (result.success && result.data) {
       // 解析 Notion 頁面資料為更易用的格式
-      const applications = result.data.map((page: Record<string, unknown>) => {
+      const applications = (result.data as Record<string, unknown>[]).map((page) => {
         const properties = page.properties as Record<string, unknown>
         
         // 輔助函數：安全取得屬性值
