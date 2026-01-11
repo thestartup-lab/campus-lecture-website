@@ -650,10 +650,10 @@ export default function DashboardPage() {
         {/* Tabs */}
         <div className="card-editorial overflow-hidden">
           {/* Tab Headers */}
-          <div className="flex border-b-2 border-black">
+          <div className="flex border-b-2 border-black overflow-x-auto">
             <button
               onClick={() => setActiveTab('articles')}
-              className={`flex-1 sm:flex-none px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
+              className={`flex-shrink-0 px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
                 activeTab === 'articles'
                   ? 'bg-black text-paper'
                   : 'bg-paper text-black hover:bg-black/5'
@@ -669,7 +669,7 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('applications')}
-              className={`flex-1 sm:flex-none px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border-l-2 border-black ${
+              className={`flex-shrink-0 px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border-l-2 border-black ${
                 activeTab === 'applications'
                   ? 'bg-black text-paper'
                   : 'bg-paper text-black hover:bg-black/5'
@@ -685,7 +685,7 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('subscribers')}
-              className={`flex-1 sm:flex-none px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border-l-2 border-black ${
+              className={`flex-shrink-0 px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border-l-2 border-black ${
                 activeTab === 'subscribers'
                   ? 'bg-black text-paper'
                   : 'bg-paper text-black hover:bg-black/5'
@@ -701,7 +701,7 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('testimonials')}
-              className={`flex-1 sm:flex-none px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border-l-2 border-black ${
+              className={`flex-shrink-0 px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border-l-2 border-black ${
                 activeTab === 'testimonials'
                   ? 'bg-black text-paper'
                   : 'bg-paper text-black hover:bg-black/5'
@@ -717,7 +717,7 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setActiveTab('lectureRequests')}
-              className={`flex-1 sm:flex-none px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border-l-2 border-black ${
+              className={`flex-shrink-0 px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 border-l-2 border-black ${
                 activeTab === 'lectureRequests'
                   ? 'bg-black text-paper'
                   : 'bg-paper text-black hover:bg-black/5'
