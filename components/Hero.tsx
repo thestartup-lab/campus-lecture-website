@@ -92,7 +92,7 @@ export default function Hero() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/invitation" className="btn-editorial group">
+              <Link href="/lecture-request" className="btn-editorial group">
                 <span>立即邀約講師</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>

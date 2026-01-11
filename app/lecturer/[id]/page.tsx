@@ -203,7 +203,7 @@ export default async function LecturerPage({ params }: { params: Promise<{ id: s
               )}
 
               {/* CTA */}
-              <Link href="/invitation" className="btn-editorial">
+              <Link href="/lecture-request" className="btn-editorial">
                 <span>邀約講座</span>
                 <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
               </Link>
@@ -317,7 +317,7 @@ export default async function LecturerPage({ params }: { params: Promise<{ id: s
             歡迎填寫講座邀約申請表，我們會盡快與您聯繫，討論講座內容與細節。
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/invitation" className="btn-editorial bg-paper text-black border-paper hover:bg-transparent hover:text-paper">
+            <Link href="/lecture-request" className="btn-editorial bg-paper text-black border-paper hover:bg-transparent hover:text-paper">
               <span>立即邀約</span>
               <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
             </Link>

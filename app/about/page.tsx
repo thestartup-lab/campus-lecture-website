@@ -361,7 +361,7 @@ export default function AboutPage() {
               準備好讓改變發生了嗎？
             </h3>
             <a 
-              href="/invitation"
+              href="/lecture-request"
               className="inline-flex items-center gap-3 bg-white text-black px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-transparent hover:text-white border-2 border-white transition-colors"
             >
               邀請我們走進校園

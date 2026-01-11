@@ -14,7 +14,7 @@ export default function Navbar() {
     { name: '緣起', href: '/about' },
     { name: '專欄', href: '/blog' },
     { name: '講師', href: '/lecturers' },
-    { name: '邀約', href: '/invitation' },
+    { name: '邀約', href: '/lecture-request' },
   ]
 
   const handleSignOut = async () => {
