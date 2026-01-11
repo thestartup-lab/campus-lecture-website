@@ -11,7 +11,7 @@ const MOCK_ARTICLES = [
     author: '張教授',
     date: '2024-01-15',
     category: '教育創新',
-    image_url: null,
+    image_url: '/images/lightbulb.jpeg',
     content: '',
   },
   {
@@ -149,10 +149,15 @@ export default async function BlogPage() {
               <Link
                 key={article.id}
                 href={`/blog/${article.id}`}
-                className="group relative block bg-white border-[3px] border-black rounded-[2px] overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 hover:-translate-y-1"
+                className="group relative block bg-white border-[3px] border-black rounded-[2px] overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 hover:-translate-y-1.5"
               >
-                {/* Image Area - Full Bleed */}
-                <div className="relative h-52 overflow-hidden">
+                {/* Number Badge - Right Top Corner, Overlapping */}
+                <div className="absolute -right-2 -top-2 z-30 font-serif text-7xl font-black text-gray-300/80 leading-none select-none pointer-events-none">
+                  {String(index + 1).padStart(2, '0')}
+                </div>
+
+                {/* Image Area - Full Bleed 50% */}
+                <div className="relative aspect-[4/3] overflow-hidden">
                   {article.image_url ? (
                     <img
                       src={article.image_url}
@@ -169,45 +174,44 @@ export default async function BlogPage() {
                         filter: 'grayscale(100%) contrast(110%) brightness(95%)'
                       }}
                     >
-                      <span className="text-8xl opacity-30">📰</span>
+                      <span className="text-8xl opacity-20">📰</span>
                     </div>
                   )}
                   
-                  {/* Noise Texture Overlay */}
+                  {/* Grainy Paper Texture Overlay */}
                   <div 
-                    className="absolute inset-0 opacity-[0.15] pointer-events-none mix-blend-overlay"
+                    className="absolute inset-0 pointer-events-none"
                     style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E")`
+                      backgroundImage: `url('https://grainy-gradients.vercel.app/noise.svg')`,
+                      opacity: 0.15
                     }}
                   />
                   
-                  {/* Category Badge - Bottom Left on Image */}
-                  <div className="absolute bottom-3 left-3 z-10">
-                    <span className="inline-block px-3 py-1.5 bg-black text-white text-xs font-bold uppercase tracking-widest">
+                  {/* Category Badge - Bottom Left, Overlapping Border */}
+                  <div className="absolute -bottom-3 left-4 z-20">
+                    <span className="inline-block px-4 py-2 bg-black text-white text-xs font-bold uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
                       {article.category}
                     </span>
                   </div>
                 </div>
 
-                {/* Number Badge - Overlapping Position */}
-                <div className="absolute right-4 top-44 z-20 font-serif text-6xl font-black text-gray-200 leading-none select-none">
-                  {String(index + 1).padStart(2, '0')}
-                </div>
+                {/* Separator Line */}
+                <div className="border-b-[3px] border-black" />
 
                 {/* Content */}
-                <div className="relative p-6 pt-5 bg-white">
+                <div className="relative p-6 pt-8 bg-white">
                   {/* Title */}
                   <h3 className="font-serif text-xl font-bold text-black mb-3 leading-tight line-clamp-2 group-hover:underline underline-offset-4 decoration-2">
                     {article.title}
                   </h3>
 
                   {/* Excerpt */}
-                  <p className="text-black/60 text-sm mb-4 line-clamp-3 leading-relaxed">
+                  <p className="text-black/60 text-sm mb-5 line-clamp-3 leading-relaxed">
                     {article.excerpt}
                   </p>
 
                   {/* Meta Info */}
-                  <div className="flex items-center justify-between text-xs uppercase tracking-wider text-black/40 font-medium">
+                  <div className="flex items-center justify-between text-xs uppercase tracking-wider text-black/40 font-medium pt-4 border-t border-black/10">
                     <div className="flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5" strokeWidth={1.5} />
                       <span>{article.author}</span>
@@ -220,10 +224,10 @@ export default async function BlogPage() {
                 </div>
 
                 {/* Read More */}
-                <div className="px-6 py-4 border-t-2 border-black bg-white group-hover:bg-black group-hover:text-white transition-colors">
+                <div className="px-6 py-4 border-t-[3px] border-black bg-white group-hover:bg-black group-hover:text-white transition-colors">
                   <span className="flex items-center justify-between text-sm uppercase tracking-widest font-bold">
                     閱讀全文
-                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" strokeWidth={2} />
+                    <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" strokeWidth={2} />
                   </span>
                 </div>
               </Link>
