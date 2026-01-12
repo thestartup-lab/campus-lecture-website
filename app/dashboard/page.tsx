@@ -441,22 +441,21 @@ export default function DashboardPage() {
 
   // 儲存文章 (Notion)
   const saveArticle = async () => {
-    // Debug: 顯示當前表單狀態
-    console.log('saveArticle 被呼叫', {
-      title: articleForm.title,
-      contentLength: articleForm.content?.length,
-      contentPreview: articleForm.content?.substring(0, 100),
-      isEditing: !!editingArticle
-    })
-    
-    // 新文章需要標題和內容，更新文章只需要標題（內容可在 Notion 頁面中編輯）
+    // 驗證標題（必填）
     if (!articleForm.title.trim()) {
       alert('請填寫標題')
       return
     }
-    // 新增文章時需要內容，更新時可選（因為可在 Notion 中編輯）
-    if (!editingArticle && !articleForm.content.trim()) {
-      alert('請填寫內容')
+    
+    // 檢查內容是否有實際文字（移除 HTML 標籤後檢查）
+    const plainTextContent = articleForm.content
+      .replace(/<[^>]*>/g, '')  // 移除 HTML 標籤
+      .replace(/&nbsp;/g, ' ')   // 替換 &nbsp;
+      .trim()
+    
+    // 新增文章時需要內容，更新時可選（可在 Notion 中編輯）
+    if (!editingArticle && !plainTextContent) {
+      alert('請填寫內容（或在 Notion 中編輯後再發布）')
       return
     }
 
@@ -471,18 +470,24 @@ export default function DashboardPage() {
 
     try {
       if (editingArticle) {
-        // 更新文章
+        // 更新文章 - 只傳送有變更的欄位
+        const updateData: Record<string, unknown> = {
+          title: articleForm.title,
+          excerpt: articleForm.excerpt || '',
+          category: articleForm.category,
+          imageUrl: articleForm.image_url || '',
+          status: notionStatus,
+        }
+        
+        // 只有當編輯器有實際內容時才更新 content 欄位
+        if (plainTextContent) {
+          updateData.content = articleForm.content
+        }
+        
         const response = await fetch(`/api/posts/${editingArticle.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title: articleForm.title,
-            excerpt: articleForm.excerpt || '',
-            content: articleForm.content,
-            category: articleForm.category,
-            imageUrl: articleForm.image_url || '',
-            status: notionStatus,
-          }),
+          body: JSON.stringify(updateData),
         })
         const result = await response.json()
 

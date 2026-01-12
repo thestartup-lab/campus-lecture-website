@@ -40,16 +40,20 @@ export async function PATCH(
     const { id } = await params
     const body = await request.json()
 
-    const result = await updatePost(id, {
-      title: body.title,
-      excerpt: body.excerpt,
-      content: body.content,
-      author: body.author,
-      authorId: body.authorId,
-      category: body.category,
-      imageUrl: body.imageUrl || body.image_url,
-      status: body.status,
-    })
+    // 只傳遞有定義的欄位，undefined 的欄位不會被更新
+    const updateData: Record<string, unknown> = {}
+    if (body.title !== undefined) updateData.title = body.title
+    if (body.excerpt !== undefined) updateData.excerpt = body.excerpt
+    if (body.content !== undefined) updateData.content = body.content
+    if (body.author !== undefined) updateData.author = body.author
+    if (body.authorId !== undefined) updateData.authorId = body.authorId
+    if (body.category !== undefined) updateData.category = body.category
+    if (body.imageUrl !== undefined || body.image_url !== undefined) {
+      updateData.imageUrl = body.imageUrl || body.image_url
+    }
+    if (body.status !== undefined) updateData.status = body.status
+
+    const result = await updatePost(id, updateData)
 
     if (!result.success) {
       return NextResponse.json(
