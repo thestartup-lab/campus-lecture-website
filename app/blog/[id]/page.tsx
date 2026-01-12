@@ -1,20 +1,10 @@
-import { getPost, getPosts } from '@/lib/notion'
+import { getPost } from '@/lib/notion'
 import { Calendar, User, Tag, ArrowLeft, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-// 生成靜態路徑
-export async function generateStaticParams() {
-  const result = await getPosts({ status: '已發佈', limit: 50 })
-  
-  if (!result.success || !result.data) {
-    return []
-  }
-
-  return result.data.map((post) => ({
-    id: post.id,
-  }))
-}
+// 使用動態渲染，避免構建時超時
+export const dynamic = 'force-dynamic'
 
 // 生成 metadata
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
