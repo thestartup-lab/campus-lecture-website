@@ -29,7 +29,8 @@ import {
   Tag,
   MessageCircle,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Star
 } from 'lucide-react'
 
 // 動態載入富文本編輯器（避免 SSR 問題）
@@ -71,6 +72,7 @@ interface Article {
   category: string
   image_url: string | null
   status: string
+  featured: boolean
   created_at: string
   updated_at: string
 }
@@ -147,7 +149,8 @@ export default function DashboardPage() {
     content: '',
     category: '教育理念',
     image_url: '',
-    status: 'published'
+    status: 'published',
+    featured: false
   })
 
   // 類別選項（與 Notion 資料庫同步）
@@ -233,6 +236,7 @@ export default function DashboardPage() {
           category: string
           imageUrl: string
           status: string
+          featured: boolean
           createdAt: string
         }) => ({
           id: article.id,
@@ -243,6 +247,7 @@ export default function DashboardPage() {
           category: article.category,
           image_url: article.imageUrl,
           status: article.status === '已發佈' ? 'published' : article.status === '草稿' ? 'draft' : 'archived',
+          featured: article.featured || false,
           created_at: article.createdAt,
           updated_at: article.createdAt,
         }))
@@ -420,7 +425,8 @@ export default function DashboardPage() {
       content: '',
       category: '教育理念',
       image_url: '',
-      status: 'published'
+      status: 'published',
+      featured: false
     })
     setShowArticleModal(true)
   }
@@ -436,7 +442,8 @@ export default function DashboardPage() {
       content: article.content || '',
       category: article.category,
       image_url: article.image_url || '',
-      status: article.status
+      status: article.status,
+      featured: article.featured || false
     })
     setShowArticleModal(true)
     
@@ -453,7 +460,8 @@ export default function DashboardPage() {
         
         setArticleForm(prev => ({
           ...prev,
-          content: contentToUse
+          content: contentToUse,
+          featured: result.data.featured || false
         }))
       }
     } catch (error) {
@@ -500,6 +508,7 @@ export default function DashboardPage() {
           category: articleForm.category,
           imageUrl: articleForm.image_url || '',
           status: notionStatus,
+          featured: articleForm.featured,
         }
         
         // 只有當編輯器有實際內容時才更新 content 欄位
@@ -535,6 +544,7 @@ export default function DashboardPage() {
             category: articleForm.category,
             imageUrl: articleForm.image_url || '',
             status: notionStatus,
+            featured: articleForm.featured,
           }),
         })
         const result = await response.json()
@@ -897,10 +907,16 @@ export default function DashboardPage() {
                     <div key={article.id} className="px-6 py-4 hover:bg-paper-dark transition-colors">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2">
+                          <div className="flex items-center gap-3 mb-2 flex-wrap">
                             <h3 className="font-serif text-lg font-bold text-black truncate">
                               {article.title}
                             </h3>
+                            {article.featured && (
+                              <span className="flex items-center gap-1 px-2 py-0.5 bg-black text-paper text-xs uppercase tracking-wider">
+                                <Star className="w-3 h-3" strokeWidth={1.5} fill="currentColor" />
+                                精選
+                              </span>
+                            )}
                             {getStatusBadge(article.status)}
                           </div>
                           <p className="text-sm text-ink-muted line-clamp-2 mb-3">
@@ -1514,6 +1530,35 @@ export default function DashboardPage() {
                     <span>儲存為草稿</span>
                   </label>
                 </div>
+              </div>
+
+              {/* 精選文章 */}
+              <div>
+                <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                  首頁精選
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <button
+                    type="button"
+                    onClick={() => setArticleForm(prev => ({ ...prev, featured: !prev.featured }))}
+                    className={`relative w-12 h-6 rounded-full transition-colors ${
+                      articleForm.featured ? 'bg-black' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
+                        articleForm.featured ? 'translate-x-6' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                  <span className="flex items-center gap-2">
+                    <Star className={`w-4 h-4 ${articleForm.featured ? 'text-black fill-black' : 'text-gray-400'}`} strokeWidth={1.5} />
+                    {articleForm.featured ? '顯示於首頁精選專欄' : '不顯示於首頁'}
+                  </span>
+                </label>
+                <p className="text-xs text-ink-muted mt-2">
+                  精選文章會優先顯示在首頁的「精選專欄」區塊
+                </p>
               </div>
             </div>
 

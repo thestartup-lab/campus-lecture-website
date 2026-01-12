@@ -352,6 +352,7 @@ export interface NotionPost {
   category: string
   imageUrl?: string
   status: '草稿' | '已發佈' | '已封存'
+  featured?: boolean  // 精選文章
 }
 
 export interface NotionPostResult {
@@ -364,6 +365,7 @@ export interface NotionPostResult {
   category: string
   imageUrl: string
   status: string
+  featured: boolean  // 精選文章
   createdAt: string
   url: string
 }
@@ -436,6 +438,7 @@ export async function getPosts(options?: {
         category: getSelect(props['分類']),
         imageUrl: getUrl(props['封面照片']),
         status: getStatus(props['文章狀態']),
+        featured: getCheckbox(props['精選']),
         createdAt: getCreatedTime(props['建立時間']),
         url: (page.url as string) || '',
       }
@@ -444,6 +447,48 @@ export async function getPosts(options?: {
     return { success: true, data: posts }
   } catch (error) {
     console.error('取得文章失敗:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '未知錯誤',
+    }
+  }
+}
+
+/**
+ * 取得首頁精選文章（優先精選，不夠則用最新文章補足）
+ */
+export async function getFeaturedPosts(limit: number = 3): Promise<{ success: boolean; data?: NotionPostResult[]; error?: string }> {
+  try {
+    // 先獲取所有已發佈的文章
+    const result = await getPosts({ status: '已發佈' })
+    
+    if (!result.success || !result.data) {
+      return result
+    }
+    
+    const allPosts = result.data
+    
+    // 分離精選和非精選文章
+    const featuredPosts = allPosts.filter(post => post.featured)
+    const nonFeaturedPosts = allPosts.filter(post => !post.featured)
+    
+    // 優先使用精選文章，不夠則用最新文章補足
+    let finalPosts: NotionPostResult[] = []
+    
+    if (featuredPosts.length >= limit) {
+      // 精選文章足夠，取前 N 篇
+      finalPosts = featuredPosts.slice(0, limit)
+    } else {
+      // 精選文章不夠，用非精選文章補足
+      finalPosts = [
+        ...featuredPosts,
+        ...nonFeaturedPosts.slice(0, limit - featuredPosts.length)
+      ]
+    }
+    
+    return { success: true, data: finalPosts }
+  } catch (error) {
+    console.error('取得精選文章失敗:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : '未知錯誤',
@@ -497,6 +542,9 @@ export async function createPost(
         '文章狀態': {
           status: { name: data.status },
         },
+        '精選': {
+          checkbox: data.featured || false,
+        },
       },
     })
 
@@ -546,6 +594,9 @@ export async function updatePost(
     }
     if (data.status !== undefined) {
       properties['文章狀態'] = { status: { name: data.status } }
+    }
+    if (data.featured !== undefined) {
+      properties['精選'] = { checkbox: data.featured }
     }
 
     await notion.pages.update({
@@ -1054,6 +1105,7 @@ export async function getPost(pageId: string): Promise<{ success: boolean; data?
       category: getSelect(props['分類']),
       imageUrl: getUrl(props['封面照片']),
       status: getStatus(props['文章狀態']),
+      featured: getCheckbox(props['精選']),
       createdAt: getCreatedTime(props['建立時間']),
       url: (page as unknown as { url: string }).url || '',
       htmlContent: contentResult.content || '', // 頁面內容轉換的 HTML

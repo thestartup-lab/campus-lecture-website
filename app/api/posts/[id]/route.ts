@@ -52,6 +52,7 @@ export async function PATCH(
       updateData.imageUrl = body.imageUrl || body.image_url
     }
     if (body.status !== undefined) updateData.status = body.status
+    if (body.featured !== undefined) updateData.featured = body.featured
 
     const result = await updatePost(id, updateData)
 

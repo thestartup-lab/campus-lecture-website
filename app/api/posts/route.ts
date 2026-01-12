@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { 
-  getPosts, 
+  getPosts,
+  getFeaturedPosts,
   createPost, 
   type NotionPost 
 } from '@/lib/notion'
@@ -12,6 +13,23 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') as '草稿' | '已發佈' | '已封存' | null
     const authorId = searchParams.get('authorId')
     const limit = searchParams.get('limit')
+    const featured = searchParams.get('featured')
+
+    // 如果請求精選文章
+    if (featured === 'true') {
+      const result = await getFeaturedPosts(limit ? parseInt(limit) : 3)
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: 500 }
+        )
+      }
+      return NextResponse.json({
+        success: true,
+        data: result.data,
+        count: result.data?.length || 0,
+      })
+    }
 
     const result = await getPosts({
       status: status || undefined,
@@ -62,6 +80,7 @@ export async function POST(request: NextRequest) {
       category: body.category,
       imageUrl: body.imageUrl || body.image_url || '',
       status: body.status || '草稿',
+      featured: body.featured || false,
     }
 
     const result = await createPost(postData)
