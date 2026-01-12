@@ -163,40 +163,52 @@ export default function DashboardPage() {
     }
   }, [user, loading, router])
 
-  // 獲取講座申請
+  // 獲取講座申請（Supabase - 舊版備份）
   const fetchApplications = async () => {
     setLoadingApps(true)
     setAppError(null)
     
-    const { data, error } = await supabase
-      .from('applications')
-      .select('*')
-      .order('created_at', { ascending: false })
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('獲取申請錯誤:', error)
-      setAppError(error.message)
-    } else {
-      setApplications(data || [])
+      if (error) {
+        // 資料表可能不存在，靜默處理
+        if (!error.message?.includes('does not exist')) {
+          setAppError(error.message)
+        }
+      } else {
+        setApplications(data || [])
+      }
+    } catch {
+      // 忽略錯誤
     }
     setLoadingApps(false)
   }
 
-  // 獲取訂閱者
+  // 獲取訂閱者（Supabase）
   const fetchSubscribers = async () => {
     setLoadingSubscribers(true)
     setSubError(null)
     
-    const { data, error } = await supabase
-      .from('newsletter_subscribers')
-      .select('*')
-      .order('created_at', { ascending: false })
+    try {
+      const { data, error } = await supabase
+        .from('newsletter_subscribers')
+        .select('*')
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('獲取訂閱者錯誤:', error)
-      setSubError(error.message)
-    } else {
-      setSubscribers(data || [])
+      if (error) {
+        // 資料表可能不存在，靜默處理
+        if (!error.message?.includes('does not exist')) {
+          setSubError(error.message)
+        }
+      } else {
+        setSubscribers(data || [])
+      }
+    } catch {
+      // 忽略錯誤
     }
     setLoadingSubscribers(false)
   }
