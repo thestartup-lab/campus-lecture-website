@@ -1,5 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { updatePost, deletePost } from '@/lib/notion'
+import { getPost, updatePost, deletePost } from '@/lib/notion'
+
+// GET /api/posts/[id] - 取得單一文章（含頁面內容）
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    const result = await getPost(id)
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: result.data,
+    })
+  } catch (error) {
+    console.error('GET /api/posts/[id] 錯誤:', error)
+    return NextResponse.json(
+      { success: false, error: '伺服器錯誤' },
+      { status: 500 }
+    )
+  }
+}
 
 // PATCH /api/posts/[id] - 更新文章
 export async function PATCH(

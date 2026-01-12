@@ -804,6 +804,267 @@ export async function deleteTestimonial(
 }
 
 // ========================================
+// 頁面內容（Blocks）相關函式
+// ========================================
+
+interface NotionBlock {
+  type: string
+  [key: string]: unknown
+}
+
+/**
+ * 讀取 Notion 頁面的 blocks（內容）
+ */
+export async function getPageContent(pageId: string): Promise<{ success: boolean; content?: string; blocks?: unknown[]; error?: string }> {
+  try {
+    const blocks: unknown[] = []
+    let cursor: string | undefined = undefined
+
+    // 遞迴獲取所有 blocks
+    do {
+      const response = await notion.blocks.children.list({
+        block_id: pageId,
+        start_cursor: cursor,
+        page_size: 100,
+      })
+
+      blocks.push(...response.results)
+      cursor = response.has_more ? response.next_cursor ?? undefined : undefined
+    } while (cursor)
+
+    // 將 blocks 轉換為 HTML
+    const html = blocksToHtml(blocks as NotionBlock[])
+
+    return {
+      success: true,
+      content: html,
+      blocks,
+    }
+  } catch (error) {
+    console.error('讀取頁面內容失敗:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '未知錯誤',
+    }
+  }
+}
+
+/**
+ * 將 Notion blocks 轉換為 HTML
+ */
+function blocksToHtml(blocks: NotionBlock[]): string {
+  return blocks.map(block => blockToHtml(block)).join('\n')
+}
+
+function blockToHtml(block: NotionBlock): string {
+  const type = block.type
+
+  switch (type) {
+    case 'paragraph': {
+      const text = richTextToHtml((block.paragraph as { rich_text: RichTextItem[] })?.rich_text || [])
+      return text ? `<p>${text}</p>` : '<p></p>'
+    }
+
+    case 'heading_1': {
+      const text = richTextToHtml((block.heading_1 as { rich_text: RichTextItem[] })?.rich_text || [])
+      return `<h1>${text}</h1>`
+    }
+
+    case 'heading_2': {
+      const text = richTextToHtml((block.heading_2 as { rich_text: RichTextItem[] })?.rich_text || [])
+      return `<h2>${text}</h2>`
+    }
+
+    case 'heading_3': {
+      const text = richTextToHtml((block.heading_3 as { rich_text: RichTextItem[] })?.rich_text || [])
+      return `<h3>${text}</h3>`
+    }
+
+    case 'bulleted_list_item': {
+      const text = richTextToHtml((block.bulleted_list_item as { rich_text: RichTextItem[] })?.rich_text || [])
+      return `<li>${text}</li>`
+    }
+
+    case 'numbered_list_item': {
+      const text = richTextToHtml((block.numbered_list_item as { rich_text: RichTextItem[] })?.rich_text || [])
+      return `<li>${text}</li>`
+    }
+
+    case 'quote': {
+      const text = richTextToHtml((block.quote as { rich_text: RichTextItem[] })?.rich_text || [])
+      return `<blockquote>${text}</blockquote>`
+    }
+
+    case 'callout': {
+      const callout = block.callout as { rich_text: RichTextItem[]; icon?: { emoji?: string } }
+      const text = richTextToHtml(callout?.rich_text || [])
+      const icon = callout?.icon?.emoji || '💡'
+      return `<div class="callout"><span class="callout-icon">${icon}</span><p>${text}</p></div>`
+    }
+
+    case 'code': {
+      const code = block.code as { rich_text: RichTextItem[]; language?: string }
+      const text = richTextToPlainText(code?.rich_text || [])
+      const language = code?.language || ''
+      return `<pre><code class="language-${language}">${escapeHtml(text)}</code></pre>`
+    }
+
+    case 'divider':
+      return '<hr />'
+
+    case 'image': {
+      const image = block.image as { type: string; file?: { url: string }; external?: { url: string }; caption?: RichTextItem[] }
+      const url = image?.type === 'file' ? image.file?.url : image.external?.url
+      const caption = richTextToPlainText(image?.caption || [])
+      if (url) {
+        return `<figure><img src="${url}" alt="${caption}" />${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`
+      }
+      return ''
+    }
+
+    case 'video': {
+      const video = block.video as { type: string; file?: { url: string }; external?: { url: string } }
+      const url = video?.type === 'file' ? video.file?.url : video.external?.url
+      if (url) {
+        // 檢查是否為 YouTube
+        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+          const videoId = extractYouTubeId(url)
+          if (videoId) {
+            return `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`
+          }
+        }
+        return `<video src="${url}" controls></video>`
+      }
+      return ''
+    }
+
+    case 'embed': {
+      const embed = block.embed as { url: string }
+      const url = embed?.url
+      if (url) {
+        return `<div class="embed"><iframe src="${url}" frameborder="0"></iframe></div>`
+      }
+      return ''
+    }
+
+    case 'bookmark': {
+      const bookmark = block.bookmark as { url: string; caption?: RichTextItem[] }
+      const url = bookmark?.url
+      const caption = richTextToPlainText(bookmark?.caption || [])
+      if (url) {
+        return `<a href="${url}" class="bookmark" target="_blank" rel="noopener noreferrer">${caption || url}</a>`
+      }
+      return ''
+    }
+
+    case 'toggle': {
+      const toggle = block.toggle as { rich_text: RichTextItem[] }
+      const text = richTextToHtml(toggle?.rich_text || [])
+      return `<details><summary>${text}</summary></details>`
+    }
+
+    default:
+      return ''
+  }
+}
+
+interface RichTextItem {
+  plain_text: string
+  href?: string | null
+  annotations?: {
+    bold?: boolean
+    italic?: boolean
+    strikethrough?: boolean
+    underline?: boolean
+    code?: boolean
+    color?: string
+  }
+}
+
+function richTextToHtml(richText: RichTextItem[]): string {
+  return richText.map(item => {
+    let text = escapeHtml(item.plain_text)
+    const annotations = item.annotations
+
+    if (annotations?.code) {
+      text = `<code>${text}</code>`
+    }
+    if (annotations?.bold) {
+      text = `<strong>${text}</strong>`
+    }
+    if (annotations?.italic) {
+      text = `<em>${text}</em>`
+    }
+    if (annotations?.strikethrough) {
+      text = `<del>${text}</del>`
+    }
+    if (annotations?.underline) {
+      text = `<u>${text}</u>`
+    }
+    if (item.href) {
+      text = `<a href="${item.href}" target="_blank" rel="noopener noreferrer">${text}</a>`
+    }
+
+    return text
+  }).join('')
+}
+
+function richTextToPlainText(richText: RichTextItem[]): string {
+  return richText.map(item => item.plain_text).join('')
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+function extractYouTubeId(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  return match ? match[1] : null
+}
+
+/**
+ * 取得單一文章（包含頁面內容）
+ */
+export async function getPost(pageId: string): Promise<{ success: boolean; data?: NotionPostResult & { htmlContent: string }; error?: string }> {
+  try {
+    // 獲取頁面屬性
+    const page = await notion.pages.retrieve({ page_id: pageId })
+    const props = (page as unknown as { properties: Record<string, unknown> }).properties
+
+    // 獲取頁面內容
+    const contentResult = await getPageContent(pageId)
+    
+    const post: NotionPostResult & { htmlContent: string } = {
+      id: pageId,
+      title: getTitle(props['文章標題']),
+      excerpt: getRichText(props['摘要']),
+      content: getRichText(props['內容']), // 保留舊欄位作為備用
+      author: getRichText(props['作者']),
+      authorId: getRichText(props['作者ID']),
+      category: getSelect(props['分類']),
+      imageUrl: getUrl(props['封面照片']),
+      status: getStatus(props['文章狀態']),
+      createdAt: getCreatedTime(props['建立時間']),
+      url: (page as unknown as { url: string }).url || '',
+      htmlContent: contentResult.content || '', // 頁面內容轉換的 HTML
+    }
+
+    return { success: true, data: post }
+  } catch (error) {
+    console.error('取得文章失敗:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '未知錯誤',
+    }
+  }
+}
+
+// ========================================
 // 屬性解析輔助函式
 // ========================================
 
