@@ -201,48 +201,85 @@ export default function DashboardPage() {
     setLoadingSubscribers(false)
   }
 
-  // 獲取文章
+  // 獲取文章 (從 Notion)
   const fetchArticles = async () => {
     setLoadingArticles(true)
     setArticleError(null)
     
-    const authorName = profile?.full_name || profile?.display_name || user?.email || ''
-    
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*')
-      .eq('author', authorName)
-      .order('created_at', { ascending: false })
+    try {
+      const response = await fetch('/api/posts')
+      const result = await response.json()
 
-    if (error) {
-      console.error('獲取文章錯誤:', error)
-      // 如果沒有文章或表格不存在，不顯示錯誤
-      if (!error.message.includes('does not exist')) {
-        setArticleError(error.message)
+      if (result.success && result.data) {
+        // 轉換 Notion 格式為本地格式
+        const formattedArticles = result.data.map((article: {
+          id: string
+          title: string
+          excerpt: string
+          content: string
+          author: string
+          category: string
+          imageUrl: string
+          status: string
+          createdAt: string
+        }) => ({
+          id: article.id,
+          title: article.title,
+          excerpt: article.excerpt,
+          content: article.content,
+          author: article.author,
+          category: article.category,
+          image_url: article.imageUrl,
+          status: article.status === '已發佈' ? 'published' : article.status === '草稿' ? 'draft' : 'archived',
+          created_at: article.createdAt,
+          updated_at: article.createdAt,
+        }))
+        setArticles(formattedArticles)
+      } else {
+        console.error('獲取文章錯誤:', result.error)
+        setArticleError(result.error || '獲取失敗')
       }
-    } else {
-      setArticles(data || [])
+    } catch (error) {
+      console.error('獲取文章錯誤:', error)
+      setArticleError('網路錯誤，請稍後再試')
     }
     setLoadingArticles(false)
   }
 
-  // 獲取回饋
+  // 獲取回饋 (從 Notion)
   const fetchTestimonials = async () => {
     setLoadingTestimonials(true)
     setTestimonialError(null)
 
-    const { data, error } = await supabase
-      .from('testimonials')
-      .select('*')
-      .order('created_at', { ascending: false })
+    try {
+      const response = await fetch('/api/testimonials')
+      const result = await response.json()
 
-    if (error) {
-      console.error('獲取回饋錯誤:', error)
-      if (!error.message.includes('does not exist')) {
-        setTestimonialError(error.message)
+      if (result.success && result.data) {
+        // 轉換 Notion 格式為本地格式
+        const formattedTestimonials = result.data.map((item: {
+          id: string
+          name: string
+          schoolTitle: string
+          content: string
+          isApproved: boolean
+          createdAt: string
+        }) => ({
+          id: item.id,
+          name: item.name,
+          school_title: item.schoolTitle,
+          content: item.content,
+          is_approved: item.isApproved,
+          created_at: item.createdAt,
+        }))
+        setTestimonials(formattedTestimonials)
+      } else {
+        console.error('獲取回饋錯誤:', result.error)
+        setTestimonialError(result.error || '獲取失敗')
       }
-    } else {
-      setTestimonials(data || [])
+    } catch (error) {
+      console.error('獲取回饋錯誤:', error)
+      setTestimonialError('網路錯誤，請稍後再試')
     }
     setLoadingTestimonials(false)
   }
@@ -298,26 +335,33 @@ export default function DashboardPage() {
     setUpdatingStatusId(null)
   }
 
-  // 切換回饋顯示狀態
+  // 切換回饋顯示狀態 (Notion)
   const toggleTestimonialApproval = async (id: string, currentStatus: boolean) => {
     setTogglingTestimonialId(id)
 
-    const { error } = await supabase
-      .from('testimonials')
-      .update({ is_approved: !currentStatus })
-      .eq('id', id)
+    try {
+      const response = await fetch(`/api/testimonials/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isApproved: !currentStatus }),
+      })
+      const result = await response.json()
 
-    if (error) {
+      if (!result.success) {
+        console.error('更新回饋狀態錯誤:', result.error)
+        alert(`更新失敗：${result.error}`)
+      } else {
+        await fetchTestimonials()
+      }
+    } catch (error) {
       console.error('更新回饋狀態錯誤:', error)
-      alert(`更新失敗：${error.message}`)
-    } else {
-      await fetchTestimonials()
+      alert('更新狀態時發生錯誤')
     }
 
     setTogglingTestimonialId(null)
   }
 
-  // 刪除回饋
+  // 刪除回饋 (Notion)
   const deleteTestimonial = async (id: string, name: string) => {
     if (!confirm(`確定要刪除來自「${name}」的回饋嗎？此操作無法復原。`)) {
       return
@@ -325,16 +369,21 @@ export default function DashboardPage() {
 
     setDeletingTestimonialId(id)
 
-    const { error } = await supabase
-      .from('testimonials')
-      .delete()
-      .eq('id', id)
+    try {
+      const response = await fetch(`/api/testimonials/${id}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
 
-    if (error) {
+      if (!result.success) {
+        console.error('刪除回饋錯誤:', result.error)
+        alert(`刪除失敗：${result.error}`)
+      } else {
+        await fetchTestimonials()
+      }
+    } catch (error) {
       console.error('刪除回饋錯誤:', error)
-      alert(`刪除失敗：${error.message}`)
-    } else {
-      await fetchTestimonials()
+      alert('刪除時發生錯誤')
     }
 
     setDeletingTestimonialId(null)
@@ -378,7 +427,7 @@ export default function DashboardPage() {
     setShowArticleModal(true)
   }
 
-  // 儲存文章
+  // 儲存文章 (Notion)
   const saveArticle = async () => {
     if (!articleForm.title.trim() || !articleForm.content.trim()) {
       alert('請填寫標題和內容')
@@ -388,71 +437,91 @@ export default function DashboardPage() {
     setSavingArticle(true)
 
     const authorName = profile?.full_name || profile?.display_name || user?.email || '匿名'
+    const authorId = user?.id || ''
 
-    if (editingArticle) {
-      // 更新文章
-      const { error } = await supabase
-        .from('posts')
-        .update({
-          title: articleForm.title,
-          excerpt: articleForm.excerpt || null,
-          content: articleForm.content,
-          category: articleForm.category,
-          image_url: articleForm.image_url || null,
-          status: articleForm.status,
-          updated_at: new Date().toISOString()
+    // 轉換狀態格式：published -> 已發佈, draft -> 草稿, archived -> 已封存
+    const notionStatus = articleForm.status === 'published' ? '已發佈' : 
+                         articleForm.status === 'draft' ? '草稿' : '已封存'
+
+    try {
+      if (editingArticle) {
+        // 更新文章
+        const response = await fetch(`/api/posts/${editingArticle.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: articleForm.title,
+            excerpt: articleForm.excerpt || '',
+            content: articleForm.content,
+            category: articleForm.category,
+            imageUrl: articleForm.image_url || '',
+            status: notionStatus,
+          }),
         })
-        .eq('id', editingArticle.id)
+        const result = await response.json()
 
-      if (error) {
-        console.error('更新文章錯誤:', error)
-        alert(`更新失敗：${error.message}`)
+        if (!result.success) {
+          console.error('更新文章錯誤:', result.error)
+          alert(`更新失敗：${result.error}`)
+        } else {
+          setShowArticleModal(false)
+          fetchArticles()
+        }
       } else {
-        setShowArticleModal(false)
-        fetchArticles()
-      }
-    } else {
-      // 新增文章
-      const { error } = await supabase
-        .from('posts')
-        .insert([{
-          title: articleForm.title,
-          excerpt: articleForm.excerpt || null,
-          content: articleForm.content,
-          author: authorName,
-          category: articleForm.category,
-          image_url: articleForm.image_url || null,
-          status: articleForm.status
-        }])
+        // 新增文章
+        const response = await fetch('/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: articleForm.title,
+            excerpt: articleForm.excerpt || '',
+            content: articleForm.content,
+            author: authorName,
+            authorId: authorId,
+            category: articleForm.category,
+            imageUrl: articleForm.image_url || '',
+            status: notionStatus,
+          }),
+        })
+        const result = await response.json()
 
-      if (error) {
-        console.error('新增文章錯誤:', error)
-        alert(`新增失敗：${error.message}`)
-      } else {
-        setShowArticleModal(false)
-        fetchArticles()
+        if (!result.success) {
+          console.error('新增文章錯誤:', result.error)
+          alert(`新增失敗：${result.error}`)
+        } else {
+          setShowArticleModal(false)
+          fetchArticles()
+        }
       }
+    } catch (error) {
+      console.error('儲存文章錯誤:', error)
+      alert('儲存時發生錯誤')
     }
 
     setSavingArticle(false)
   }
 
-  // 刪除文章
+  // 刪除文章 (Notion)
   const deleteArticle = async (articleId: string) => {
     if (!confirm('確定要刪除這篇文章嗎？此操作無法復原。')) {
       return
     }
 
-    const { error } = await supabase
-      .from('posts')
-      .delete()
-      .eq('id', articleId)
+    try {
+      const response = await fetch(`/api/posts/${articleId}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
 
-    if (error) {
+      if (!result.success) {
+        console.error('刪除文章錯誤:', result.error)
+        alert(`刪除失敗：${result.error}`)
+      } else {
+        fetchArticles()
+      }
+    } catch (error) {
       console.error('刪除文章錯誤:', error)
-      alert(`刪除失敗：${error.message}`)
-    } else {
-      fetchArticles()
+      alert('刪除時發生錯誤')
     }
   }
 

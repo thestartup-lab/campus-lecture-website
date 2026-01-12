@@ -1,0 +1,88 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { 
+  getPosts, 
+  createPost, 
+  type NotionPost 
+} from '@/lib/notion'
+
+// GET /api/posts - 取得文章列表
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status') as '草稿' | '已發佈' | '已封存' | null
+    const authorId = searchParams.get('authorId')
+    const limit = searchParams.get('limit')
+
+    const result = await getPosts({
+      status: status || undefined,
+      authorId: authorId || undefined,
+      limit: limit ? parseInt(limit) : undefined,
+    })
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: result.data,
+      count: result.data?.length || 0,
+    })
+  } catch (error) {
+    console.error('GET /api/posts 錯誤:', error)
+    return NextResponse.json(
+      { success: false, error: '伺服器錯誤' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST /api/posts - 建立新文章
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+
+    // 驗證必要欄位
+    if (!body.title || !body.content || !body.author || !body.category) {
+      return NextResponse.json(
+        { success: false, error: '缺少必要欄位：title, content, author, category' },
+        { status: 400 }
+      )
+    }
+
+    const postData: NotionPost = {
+      title: body.title,
+      excerpt: body.excerpt || '',
+      content: body.content,
+      author: body.author,
+      authorId: body.authorId || '',
+      category: body.category,
+      imageUrl: body.imageUrl || body.image_url || '',
+      status: body.status || '草稿',
+    }
+
+    const result = await createPost(postData)
+
+    if (!result.success) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      pageId: result.pageId,
+      message: '文章建立成功',
+    })
+  } catch (error) {
+    console.error('POST /api/posts 錯誤:', error)
+    return NextResponse.json(
+      { success: false, error: '伺服器錯誤' },
+      { status: 500 }
+    )
+  }
+}

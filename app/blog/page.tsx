@@ -1,8 +1,8 @@
-import { Calendar, User, Tag, ArrowRight, ArrowUpRight } from 'lucide-react'
+import { Calendar, User, ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { getPosts } from '@/lib/notion'
 
-// 假資料（暫時使用，當 Supabase 沒有資料時顯示）
+// 假資料（暫時使用，當 Notion 沒有資料時顯示）
 const MOCK_ARTICLES = [
   {
     id: '1',
@@ -34,62 +34,29 @@ const MOCK_ARTICLES = [
     image_url: null,
     content: '',
   },
-  {
-    id: '4',
-    title: '跨領域學習：培養未來人才的關鍵',
-    excerpt: '在快速變遷的時代，單一專業已不足以應對複雜挑戰。本文探討如何透過跨領域學習，培養學生的綜合能力與創新思維...',
-    author: '陳教授',
-    date: '2024-01-03',
-    category: '教育創新',
-    image_url: null,
-    content: '',
-  },
-  {
-    id: '5',
-    title: '數位轉型下的教學新模式',
-    excerpt: '疫情加速了教育數位化的進程，本文分享線上與線下混合教學的實踐經驗，以及如何運用數位工具提升教學效果...',
-    author: '林老師',
-    date: '2024-01-01',
-    category: '科技教育',
-    image_url: null,
-    content: '',
-  },
-  {
-    id: '6',
-    title: '學生自主學習能力的培養策略',
-    excerpt: '自主學習是未來人才的核心能力。本文分享如何透過課程設計與教學方法，引導學生建立良好的學習習慣與自我管理能力...',
-    author: '黃博士',
-    date: '2023-12-28',
-    category: '教育方法',
-    image_url: null,
-    content: '',
-  },
 ]
 
-// 從 Supabase 抓取文章的函式
+// 從 Notion 抓取文章的函式
 async function getArticles() {
   try {
-    // 從 Supabase 抓取文章資料
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*')
-      .order('created_at', { ascending: false })
+    // 從 Notion 抓取已發佈的文章
+    const result = await getPosts({ status: '已發佈' })
 
     // 如果有錯誤或沒有資料，使用假資料
-    if (error || !data || data.length === 0) {
-      console.log('使用假資料：', error?.message || '資料庫中沒有資料')
+    if (!result.success || !result.data || result.data.length === 0) {
+      console.log('使用假資料：', result.error || 'Notion 資料庫中沒有資料')
       return MOCK_ARTICLES
     }
 
     // 轉換資料格式以符合前端需求
-    return data.map(article => ({
+    return result.data.map(article => ({
       id: article.id,
       title: article.title,
       excerpt: article.excerpt || article.content?.substring(0, 150) + '...',
       author: article.author,
-      date: new Date(article.created_at).toISOString().split('T')[0],
+      date: article.createdAt ? new Date(article.createdAt).toISOString().split('T')[0] : '',
       category: article.category,
-      image_url: article.image_url,
+      image_url: article.imageUrl,
       content: article.content,
     }))
   } catch (error) {

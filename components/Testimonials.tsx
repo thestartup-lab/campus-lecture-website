@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
 import { Quote, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 
@@ -25,17 +24,32 @@ export default function Testimonials() {
   }, [])
 
   const fetchTestimonials = async () => {
-    const { data, error } = await supabase
-      .from('testimonials')
-      .select('*')
-      .eq('is_approved', true)
-      .order('created_at', { ascending: false })
-      .limit(10)
+    try {
+      // 從 Notion API 獲取已審核的回饋
+      const response = await fetch('/api/testimonials?approved=true&limit=10')
+      const result = await response.json()
 
-    if (error) {
+      if (result.success && result.data) {
+        // 轉換資料格式
+        const formattedData = result.data.map((item: {
+          id: string
+          name: string
+          schoolTitle: string
+          content: string
+          createdAt: string
+        }) => ({
+          id: item.id,
+          name: item.name,
+          school_title: item.schoolTitle,
+          content: item.content,
+          created_at: item.createdAt,
+        }))
+        setTestimonials(formattedData)
+      } else {
+        console.error('獲取回饋錯誤:', result.error)
+      }
+    } catch (error) {
       console.error('獲取回饋錯誤:', error)
-    } else {
-      setTestimonials(data || [])
     }
     setLoading(false)
   }

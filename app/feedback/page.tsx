@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { 
   Send, 
   CheckCircle, 
@@ -34,23 +33,34 @@ export default function FeedbackPage() {
       return
     }
 
-    const { error: submitError } = await supabase
-      .from('testimonials')
-      .insert([{
-        name: formData.name.trim(),
-        school_title: formData.school_title.trim() || null,
-        content: formData.content.trim(),
-        is_approved: false
-      }])
+    try {
+      // 提交到 Notion API
+      const response = await fetch('/api/testimonials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          schoolTitle: formData.school_title.trim() || '',
+          content: formData.content.trim(),
+          isApproved: false,
+          isFeatured: false,
+        }),
+      })
 
-    if (submitError) {
-      console.error('提交回饋錯誤:', submitError)
+      const result = await response.json()
+
+      if (!result.success) {
+        console.error('提交回饋錯誤:', result.error)
+        setError('提交失敗，請稍後再試')
+        setIsSubmitting(false)
+        return
+      }
+
+      setIsSubmitted(true)
+    } catch (err) {
+      console.error('提交回饋錯誤:', err)
       setError('提交失敗，請稍後再試')
-      setIsSubmitting(false)
-      return
     }
-
-    setIsSubmitted(true)
     setIsSubmitting(false)
   }
 
