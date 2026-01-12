@@ -441,8 +441,14 @@ export default function DashboardPage() {
 
   // 儲存文章 (Notion)
   const saveArticle = async () => {
-    if (!articleForm.title.trim() || !articleForm.content.trim()) {
-      alert('請填寫標題和內容')
+    // 新文章需要標題和內容，更新文章只需要標題（內容可在 Notion 頁面中編輯）
+    if (!articleForm.title.trim()) {
+      alert('請填寫標題')
+      return
+    }
+    // 新增文章時需要內容，更新時可選（因為可在 Notion 中編輯）
+    if (!editingArticle && !articleForm.content.trim()) {
+      alert('請填寫內容')
       return
     }
 
