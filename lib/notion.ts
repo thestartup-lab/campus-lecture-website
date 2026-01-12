@@ -387,11 +387,7 @@ export async function getPosts(options?: {
     }
 
     // 建立篩選條件
-    const filters: Array<{
-      property: string
-      status?: { equals: string }
-      rich_text?: { equals: string }
-    }> = []
+    const filters: unknown[] = []
 
     if (options?.status) {
       filters.push({
@@ -407,13 +403,17 @@ export async function getPosts(options?: {
       })
     }
 
+    // 構建 filter 參數
+    let filterParam: unknown = undefined
+    if (filters.length === 1) {
+      filterParam = filters[0]
+    } else if (filters.length > 1) {
+      filterParam = { and: filters }
+    }
+
     const response = await notion.dataSources.query({
       data_source_id: dataSourceId,
-      filter: filters.length > 0 
-        ? filters.length === 1 
-          ? filters[0] 
-          : { and: filters }
-        : undefined,
+      filter: filterParam as Parameters<typeof notion.dataSources.query>[0]['filter'],
       page_size: options?.limit || 100,
       sorts: [
         {
@@ -626,11 +626,8 @@ export async function getTestimonials(options?: {
       throw new Error('無法取得回饋資料來源 ID')
     }
 
-    // 建立篩選條件
-    const filters: Array<{
-      property: string
-      checkbox: { equals: boolean }
-    }> = []
+// 建立篩選條件
+    const filters: unknown[] = []
 
     if (options?.approvedOnly) {
       filters.push({
@@ -646,13 +643,17 @@ export async function getTestimonials(options?: {
       })
     }
 
+    // 構建 filter 參數
+    let filterParam: unknown = undefined
+    if (filters.length === 1) {
+      filterParam = filters[0]
+    } else if (filters.length > 1) {
+      filterParam = { and: filters }
+    }
+
     const response = await notion.dataSources.query({
       data_source_id: dataSourceId,
-      filter: filters.length > 0 
-        ? filters.length === 1 
-          ? filters[0] 
-          : { and: filters }
-        : undefined,
+      filter: filterParam as Parameters<typeof notion.dataSources.query>[0]['filter'],
       page_size: options?.limit || 100,
       sorts: [
         {
