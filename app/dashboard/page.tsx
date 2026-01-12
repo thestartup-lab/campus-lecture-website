@@ -425,18 +425,41 @@ export default function DashboardPage() {
     setShowArticleModal(true)
   }
 
-  // 開啟編輯文章 Modal
-  const openEditArticleModal = (article: Article) => {
+  // 開啟編輯文章 Modal（從 Notion 獲取完整內容）
+  const openEditArticleModal = async (article: Article) => {
     setEditingArticle(article)
+    
+    // 先用本地資料顯示
     setArticleForm({
       title: article.title,
       excerpt: article.excerpt || '',
-      content: article.content,
+      content: article.content || '',
       category: article.category,
       image_url: article.image_url || '',
       status: article.status
     })
     setShowArticleModal(true)
+    
+    // 從 API 獲取完整內容（包括 Notion 頁面內容）
+    try {
+      const response = await fetch(`/api/posts/${article.id}`)
+      const result = await response.json()
+      
+      if (result.success && result.data) {
+        // 優先使用 Notion 頁面內容（htmlContent），如果沒有則使用「內容」欄位
+        const contentToUse = result.data.htmlContent?.trim() 
+          ? result.data.htmlContent 
+          : (result.data.content || '')
+        
+        setArticleForm(prev => ({
+          ...prev,
+          content: contentToUse
+        }))
+      }
+    } catch (error) {
+      console.error('獲取文章內容失敗:', error)
+      // 失敗時使用本地資料，不影響編輯
+    }
   }
 
   // 儲存文章 (Notion)
