@@ -550,7 +550,7 @@ export async function updatePost(
 
     await notion.pages.update({
       page_id: pageId,
-      properties,
+      properties: properties as Parameters<typeof notion.pages.update>[0]['properties'],
     })
 
     return { success: true }
@@ -769,7 +769,7 @@ export async function updateTestimonial(
 
     await notion.pages.update({
       page_id: pageId,
-      properties,
+      properties: properties as Parameters<typeof notion.pages.update>[0]['properties'],
     })
 
     return { success: true }
