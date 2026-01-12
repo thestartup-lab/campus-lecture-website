@@ -441,6 +441,14 @@ export default function DashboardPage() {
 
   // 儲存文章 (Notion)
   const saveArticle = async () => {
+    // Debug: 顯示當前表單狀態
+    console.log('saveArticle 被呼叫', {
+      title: articleForm.title,
+      contentLength: articleForm.content?.length,
+      contentPreview: articleForm.content?.substring(0, 100),
+      isEditing: !!editingArticle
+    })
+    
     // 新文章需要標題和內容，更新文章只需要標題（內容可在 Notion 頁面中編輯）
     if (!articleForm.title.trim()) {
       alert('請填寫標題')
