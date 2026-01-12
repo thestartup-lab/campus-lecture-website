@@ -145,13 +145,13 @@ export default function DashboardPage() {
     title: '',
     excerpt: '',
     content: '',
-    category: '教育創新',
+    category: '教育理念',
     image_url: '',
     status: 'published'
   })
 
-  // 類別選項（預設 + 自訂）
-  const defaultCategories = ['教育創新', '科技教育', '永續發展', '教育方法', '心理健康', '職涯發展']
+  // 類別選項（與 Notion 資料庫同步）
+  const defaultCategories = ['親子溝通', '教學技巧', '班級經營', '職涯發展', '生涯規劃', '教育理念']
   const [customCategories, setCustomCategories] = useState<string[]>([])
   const [newCategory, setNewCategory] = useState('')
   const allCategories = [...defaultCategories, ...customCategories]
@@ -406,7 +406,7 @@ export default function DashboardPage() {
       title: '',
       excerpt: '',
       content: '',
-      category: '教育創新',
+      category: '教育理念',
       image_url: '',
       status: 'published'
     })
