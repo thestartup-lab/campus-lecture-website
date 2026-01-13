@@ -2,24 +2,44 @@ import { getPost } from '@/lib/notion'
 import { Calendar, User, Tag, ArrowLeft, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 
-// 使用動態渲染，避免構建時超時
-export const dynamic = 'force-dynamic'
+// ISR: 每小時重新生成一次
+export const revalidate = 3600
 
-// 生成 metadata
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+// 生成動態 metadata（含 Open Graph）
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const result = await getPost(id)
 
   if (!result.success || !result.data) {
     return {
-      title: '文章不存在',
+      title: '文章不存在 | 教育專欄',
     }
   }
 
+  const post = result.data
+  const title = `${post.title} | 教育專欄`
+  const description = post.excerpt || post.title
+
   return {
-    title: `${result.data.title} | 教育專欄`,
-    description: result.data.excerpt || result.data.title,
+    title,
+    description,
+    authors: post.author ? [{ name: post.author }] : undefined,
+    openGraph: {
+      title,
+      description,
+      type: 'article',
+      publishedTime: post.createdAt,
+      authors: post.author ? [post.author] : undefined,
+      images: post.imageUrl ? [{ url: post.imageUrl, alt: post.title }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: post.imageUrl ? [post.imageUrl] : undefined,
+    },
   }
 }
 

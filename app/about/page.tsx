@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { BookOpen, Users, Heart, Target, GraduationCap, Briefcase, Users2, Lightbulb, MessageCircle, Send, CheckCircle, Mail, Building2 } from 'lucide-react'
+import HoneypotField from '@/components/HoneypotField'
 
 // 淡入動畫變體
 const fadeInUp = {
@@ -336,6 +337,7 @@ function InquiryFormSection() {
     organization: '',
     content: '',
   })
+  const [honeypot, setHoneypot] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
@@ -356,6 +358,7 @@ function InquiryFormSection() {
           name: formData.name,
           email: formData.email,
           content: contentWithOrg,
+          _honeypot: honeypot,
         }),
       })
 
@@ -516,6 +519,9 @@ function InquiryFormSection() {
                       className="w-full px-4 py-3 bg-paper border-2 border-black text-black placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-black resize-none text-base"
                     />
                   </div>
+
+                  {/* Honeypot 防機器人欄位 */}
+                  <HoneypotField value={honeypot} onChange={setHoneypot} />
 
                   {/* 提交按鈕 */}
                   <div className="pt-4">

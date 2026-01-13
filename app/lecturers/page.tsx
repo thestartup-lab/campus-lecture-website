@@ -1,6 +1,21 @@
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
+import type { Metadata } from 'next'
+
+// ISR: 每小時重新生成一次
+export const revalidate = 3600
+
+// SEO Metadata
+export const metadata: Metadata = {
+  title: '認識講師 | 校園講座計劃',
+  description: '我們的講師來自各個專業領域，擁有豐富的教學經驗與實務背景，致力於為學生帶來啟發性的學習體驗。',
+  openGraph: {
+    title: '認識講師 | 校園講座計劃',
+    description: '我們的講師來自各個專業領域，擁有豐富的教學經驗與實務背景。',
+    type: 'website',
+  },
+}
 
 interface Lecturer {
   id: string

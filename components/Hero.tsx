@@ -85,6 +85,7 @@ export default function Hero() {
           width={1920}
           height={800}
           className="w-full h-auto object-contain"
+          sizes="100vw"
           priority
           unoptimized
         />

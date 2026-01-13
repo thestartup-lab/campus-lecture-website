@@ -6,9 +6,8 @@ import {
   type NotionPost 
 } from '@/lib/notion'
 
-// 強制動態渲染，不使用快取
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: API 路由每小時重新驗證
+export const revalidate = 3600
 
 // GET /api/posts - 取得文章列表
 export async function GET(request: NextRequest) {

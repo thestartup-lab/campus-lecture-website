@@ -9,6 +9,46 @@ import {
   Quote
 } from 'lucide-react'
 import LecturerInquiryForm from '@/components/LecturerInquiryForm'
+import type { Metadata } from 'next'
+
+// ISR: 每小時重新生成一次
+export const revalidate = 3600
+
+// 生成動態 metadata
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const { data } = await supabase
+    .from('profiles')
+    .select('full_name, display_name, title, bio, avatar_url')
+    .eq('id', id)
+    .eq('is_approved', true)
+    .single()
+
+  if (!data) {
+    return { title: '講師不存在 | 校園講座計劃' }
+  }
+
+  const name = data.display_name || data.full_name
+  const title = `${name} | 認識講師`
+  const description = data.bio || `${name} - ${data.title || '專業講師'}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'profile',
+      images: data.avatar_url ? [{ url: data.avatar_url, alt: name }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: data.avatar_url ? [data.avatar_url] : undefined,
+    },
+  }
+}
 
 interface Experience {
   title: string

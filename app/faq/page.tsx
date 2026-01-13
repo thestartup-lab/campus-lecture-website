@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown, Send, CheckCircle, MessageCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import HoneypotField from '@/components/HoneypotField'
 
 interface FAQItem {
   id: string
@@ -89,6 +90,7 @@ export default function FAQPage() {
     email: '',
     content: '',
   })
+  const [honeypot, setHoneypot] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
@@ -112,7 +114,7 @@ export default function FAQPage() {
       const response = await fetch('/api/faq-inquiries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, _honeypot: honeypot }),
       })
 
       const result = await response.json()
@@ -287,6 +289,9 @@ export default function FAQPage() {
                   className="w-full px-4 py-3 bg-paper border-2 border-black text-black placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-black resize-none text-base"
                 />
               </div>
+
+              {/* Honeypot 防機器人欄位 */}
+              <HoneypotField value={honeypot} onChange={setHoneypot} />
 
               {/* 提交按鈕 */}
               <div className="pt-4">

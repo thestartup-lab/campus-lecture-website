@@ -2,10 +2,21 @@ import { Calendar, User, ArrowUpRight, Star, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getPosts } from '@/lib/notion'
+import type { Metadata } from 'next'
 
-// 強制動態渲染，不使用快取
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+// ISR: 每小時重新生成一次
+export const revalidate = 3600
+
+// SEO Metadata
+export const metadata: Metadata = {
+  title: '教育專欄 | 校園講座計劃',
+  description: '深入的教育觀點、實務分享與創新思維，與您一起探索教育的無限可能。',
+  openGraph: {
+    title: '教育專欄 | 校園講座計劃',
+    description: '深入的教育觀點、實務分享與創新思維，與您一起探索教育的無限可能。',
+    type: 'website',
+  },
+}
 
 // 類別封面圖片映射
 const categoryImages: Record<string, string> = {

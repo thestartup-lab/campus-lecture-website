@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { checkRateLimit, isBot, getClientIP } from '@/lib/security'
 
 // 取得所有常見問題諮詢
 export async function GET(request: Request) {
@@ -70,8 +71,28 @@ export async function GET(request: Request) {
 // 新增常見問題諮詢
 export async function POST(request: Request) {
   try {
+    // 速率限制檢查
+    const clientIP = getClientIP(request)
+    const rateLimit = checkRateLimit(`faq-inquiry:${clientIP}`, 5, 60000) // 每分鐘最多 5 次
+    
+    if (!rateLimit.allowed) {
+      return NextResponse.json({
+        success: false,
+        error: '提交過於頻繁，請稍後再試',
+      }, { status: 429 })
+    }
+
     const body = await request.json()
-    const { name, email, content, target_lecturer_id } = body
+    const { name, email, content, target_lecturer_id, _honeypot } = body
+
+    // Honeypot 檢查（防機器人）
+    if (isBot(_honeypot)) {
+      // 靜默失敗，不讓機器人知道被偵測到
+      return NextResponse.json({
+        success: true,
+        message: '諮詢已送出',
+      })
+    }
 
     // 驗證必填欄位
     if (!name || !email || !content) {
