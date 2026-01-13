@@ -1,8 +1,8 @@
 'use client'
 
-import { motion, useScroll, useSpring } from 'framer-motion'
-import { useRef } from 'react'
-import Image from 'next/image'
+import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { BookOpen, Users, Heart, Target, GraduationCap, Briefcase, Users2, Lightbulb, MessageCircle, Send, CheckCircle, Mail, Building2 } from 'lucide-react'
 
 // 淡入動畫變體
 const fadeInUp = {
@@ -20,31 +20,14 @@ const fadeInUp = {
   }
 }
 
-// 墨水進度條組件
-function InkProgressBar() {
-  const { scrollYProgress } = useScroll()
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  })
-
-  return (
-    <motion.div 
-      className="fixed top-0 left-0 right-0 h-1 bg-black origin-left z-[100]"
-      style={{ scaleX }}
-    />
-  )
-}
-
 // 首字下沉組件
 function DropCap({ children }: { children: string }) {
   const firstLetter = children.charAt(0)
   const restOfText = children.slice(1)
   
   return (
-    <p className="text-lg leading-relaxed text-black/80">
-      <span className="float-left text-7xl font-serif font-black leading-[0.8] mr-3 mt-1 text-black">
+    <p className="text-lg sm:text-xl leading-relaxed text-ink-light">
+      <span className="float-left text-7xl sm:text-8xl font-serif font-black leading-[0.8] mr-3 mt-1 text-black">
         {firstLetter}
       </span>
       {restOfText}
@@ -53,28 +36,11 @@ function DropCap({ children }: { children: string }) {
 }
 
 export default function AboutPage() {
-  const containerRef = useRef<HTMLDivElement>(null)
-
   return (
-    <div 
-      ref={containerRef}
-      className="min-h-screen"
-      style={{
-        background: `
-          radial-gradient(circle at 20% 50%, rgba(0,0,0,0.02) 0%, transparent 50%),
-          radial-gradient(circle at 80% 50%, rgba(0,0,0,0.02) 0%, transparent 50%),
-          linear-gradient(rgba(0,0,0,0.01) 1px, transparent 1px),
-          #FAFAFA
-        `,
-        backgroundSize: '100% 100%, 100% 100%, 100% 3px, 100% 100%'
-      }}
-    >
-      {/* 墨水進度條 */}
-      <InkProgressBar />
-
-      {/* ===== 區塊一：頁面英雄區 ===== */}
-      <section className="relative py-24 sm:py-32 lg:py-40 border-b-8 border-black overflow-hidden">
-        <div className="max-w-5xl mx-auto px-6 sm:px-8 lg:px-12">
+    <div className="min-h-screen bg-paper">
+      {/* ===== Hero 區 ===== */}
+      <section className="py-24 sm:py-32 border-b-2 border-black">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -82,59 +48,22 @@ export default function AboutPage() {
             variants={fadeInUp}
             className="text-center"
           >
-            {/* 標籤 */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 border-2 border-black mb-8 text-xs font-bold uppercase tracking-widest">
-              <span className="w-2 h-2 bg-black rounded-full" />
+            <span className="text-sm uppercase tracking-wider text-ink-muted mb-4 block">
               Our Story
-            </div>
-
-            {/* 主標題 */}
-            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-black leading-[1.1] tracking-tight mb-8">
-              讓生命影響生命
-              <br />
-              <span className="relative inline-block mt-2">
-                計劃緣起
-                <span className="absolute bottom-1 left-0 w-full h-3 bg-black/10 -z-10" />
-              </span>
+            </span>
+            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold text-black mb-8">
+              計劃緣起
             </h1>
-
-            {/* 副標題 */}
-            <p className="text-xl sm:text-2xl text-black/60 font-medium max-w-2xl mx-auto">
-              「給你選擇，而你可以做出決定。」
+            <p className="text-lg sm:text-xl text-ink-muted max-w-3xl mx-auto leading-relaxed">
+              二十載耕耘，回歸教育初心
             </p>
           </motion.div>
         </div>
-
-        {/* 膠捲裝飾 */}
-        <div className="mt-16 sm:mt-20 border-y-2 border-black overflow-hidden">
-          <div className="relative h-32 sm:h-40 bg-black flex items-center">
-            {/* 膠捲孔 - 上 */}
-            <div className="absolute top-2 left-0 right-0 flex justify-around px-4">
-              {[...Array(15)].map((_, i) => (
-                <div key={`top-${i}`} className="w-4 h-4 sm:w-5 sm:h-5 bg-white/90 rounded-sm" />
-              ))}
-            </div>
-            
-            {/* 膠捲內容區 */}
-            <div className="flex-1 mx-8 sm:mx-12 h-20 sm:h-24 bg-white/10 flex items-center justify-center">
-              <p className="text-white/60 text-sm sm:text-base uppercase tracking-[0.3em] font-medium">
-                — 全國校園巡迴分享 —
-              </p>
-            </div>
-            
-            {/* 膠捲孔 - 下 */}
-            <div className="absolute bottom-2 left-0 right-0 flex justify-around px-4">
-              {[...Array(15)].map((_, i) => (
-                <div key={`bottom-${i}`} className="w-4 h-4 sm:w-5 sm:h-5 bg-white/90 rounded-sm" />
-              ))}
-            </div>
-          </div>
-        </div>
       </section>
 
-      {/* ===== 區塊二：第一章 - 初衷 ===== */}
-      <section className="py-20 sm:py-28 border-b-4 border-black">
-        <div className="max-w-3xl mx-auto px-6 sm:px-8 lg:px-12">
+      {/* ===== 第一章：品牌歷程 ===== */}
+      <section className="py-24 border-b-2 border-black">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -143,98 +72,178 @@ export default function AboutPage() {
           >
             {/* 章節標題 */}
             <div className="mb-12">
-              <span className="text-xs uppercase tracking-widest text-black/40 font-bold block mb-3">
+              <span className="text-xs uppercase tracking-widest text-ink-muted font-bold block mb-3">
                 Chapter 01
               </span>
-              <h2 className="font-serif text-3xl sm:text-4xl font-black text-black leading-tight">
-                初衷
-                <span className="block text-xl sm:text-2xl font-medium text-black/60 mt-2">
-                  —— 脫下盔甲後的真實對話
-                </span>
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-black leading-tight mb-6">
+                品牌歷程
               </h2>
-              <div className="w-24 h-1 bg-black mt-6" />
+              <div className="w-24 h-1 bg-black" />
             </div>
 
-            {/* 首字下沉內容 */}
-            <div className="space-y-6">
-              <DropCap>
-                每一場冒險的起點，往往都源於一個微小的問號。在多年的教學與演講生涯中，我常被問到：「為什麼要走進校園？」
-              </DropCap>
-              
-              <p className="text-lg leading-relaxed text-black/80">
-                對我而言，鋼鐵人的盔甲不僅僅是力量的象徵，它更像是一種守護。但我發現，現今校園裡的青少年，缺少的往往不是保護，而是「選擇的勇氣」。
-              </p>
-              
-              <p className="text-lg leading-relaxed text-black/80">
-                我希望建立一個平台，不只是傳遞知識，而是透過一場場真實的生命分享，讓學生看見：在標準答案之外，人生還有無數種可能。
-              </p>
+            {/* 內容與時間軸 */}
+            <div className="grid lg:grid-cols-3 gap-12 items-start">
+              {/* 文字內容 */}
+              <div className="lg:col-span-2 space-y-6">
+                <DropCap>
+                  自 2002 年起，我們在各大專院校播下領導力的種子。從中華康輔教育推廣協會啟程，到成立「競爭LEAD教育中心」的專業深耕。這二十多年來，我們培育出無數優秀的領導人才，受邀演講累積達上百所高中職與大專院校，足跡從校園跨入企業。無論走得再遠，我們始終掛念著那群正處於生命轉折點的孩子。2026 年，我們決定展開回饋校園的計劃，讓更多的孩子可以從覺察開始，追求卓越的人生。
+                </DropCap>
+              </div>
+
+              {/* 時間軸 */}
+              <div className="lg:col-span-1">
+                <div className="border-2 border-black p-8 bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="space-y-8">
+                    {/* 2002 */}
+                    <div className="relative pl-8">
+                      <div className="absolute left-0 top-2 w-4 h-4 border-2 border-black bg-white rounded-full" />
+                      <div className="absolute left-2 top-2 w-0.5 h-full bg-black" />
+                      <div>
+                        <div className="font-serif text-2xl font-bold text-black mb-1">2002</div>
+                        <div className="text-sm text-ink-muted uppercase tracking-wider">啟航</div>
+                      </div>
+                    </div>
+
+                    {/* 2026 */}
+                    <div className="relative pl-8">
+                      <div className="absolute left-0 top-2 w-4 h-4 border-2 border-black bg-black rounded-full" />
+                      <div>
+                        <div className="font-serif text-2xl font-bold text-black mb-1">2026</div>
+                        <div className="text-sm text-ink-muted uppercase tracking-wider">回饋計畫</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ===== 區塊三：第二章 - 轉折 (社論側寫框) ===== */}
-      <section className="py-20 sm:py-28 border-b-4 border-black bg-black/5">
-        <div className="max-w-4xl mx-auto px-6 sm:px-8 lg:px-12">
+      {/* ===== 第二章：我們可以做的事 ===== */}
+      <section className="py-24 border-b-2 border-black bg-paper-dark">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={fadeInUp}
           >
-            {/* 社論側寫框 */}
-            <div 
-              className="bg-white border-4 border-black p-8 sm:p-12 lg:p-16 relative"
-              style={{
-                boxShadow: '12px 12px 0px 0px rgba(0,0,0,1)'
-              }}
-            >
-              {/* 裝飾角標 */}
-              <div className="absolute -top-4 -left-4 w-8 h-8 bg-black" />
-              <div className="absolute -top-4 -right-4 w-8 h-8 bg-black" />
-              <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-black" />
-              <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-black" />
+            {/* 章節標題 */}
+            <div className="mb-16 text-center">
+              <span className="text-xs uppercase tracking-widest text-ink-muted font-bold block mb-3">
+                Chapter 02
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-black leading-tight mb-6">
+                我們可以做的事
+              </h2>
+              <p className="text-lg text-ink-muted max-w-2xl mx-auto">
+                三位一體的專業支持
+              </p>
+              <div className="w-24 h-1 bg-black mx-auto mt-6" />
+            </div>
 
-              {/* 章節標題 */}
-              <div className="mb-10">
-                <span className="text-xs uppercase tracking-widest text-black/40 font-bold block mb-3">
-                  Chapter 02
-                </span>
-                <h2 className="font-serif text-3xl sm:text-4xl font-black text-black leading-tight">
-                  那雙在黑暗中發光的眼睛
-                </h2>
-                <div className="w-full h-1 bg-black mt-6" />
-              </div>
+            {/* 三欄式排版 */}
+            <div className="grid md:grid-cols-3 gap-8">
+              {/* A. 學生端 */}
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+                variants={fadeInUp}
+                className="border-2 border-black bg-white p-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              >
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="p-3 border-2 border-black">
+                    <GraduationCap className="w-6 h-6 text-black" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="font-serif text-2xl font-bold text-black">學生端</h3>
+                </div>
+                <ul className="space-y-4 text-ink-light">
+                  <li className="flex items-start gap-2">
+                    <span className="text-black font-bold mt-1">•</span>
+                    <span><strong className="text-black">生涯輔導：</strong>引導學生自我覺察，探索生命意義與未來方向。</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-black font-bold mt-1">•</span>
+                    <span><strong className="text-black">職涯發展：</strong>接軌產業趨勢，建立職涯藍圖與卓越的人生態度。</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-black font-bold mt-1">•</span>
+                    <span><strong className="text-black">團隊協作：</strong>透過領導力實踐，培養溝通、解決問題與共好的核心素養。</span>
+                  </li>
+                </ul>
+              </motion.div>
 
-              {/* 引言 */}
-              <blockquote className="border-l-8 border-black pl-6 mb-8">
-                <p className="font-serif text-xl sm:text-2xl italic text-black/80 leading-relaxed">
-                  「老師，我從來不覺得自己有選擇權，我以為我只能照著別人的期待走。」
-                </p>
-              </blockquote>
+              {/* B. 教師端 */}
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+                variants={fadeInUp}
+                transition={{ delay: 0.1 }}
+                className="border-2 border-black bg-white p-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              >
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="p-3 border-2 border-black">
+                    <BookOpen className="w-6 h-6 text-black" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="font-serif text-2xl font-bold text-black">教師端</h3>
+                </div>
+                <ul className="space-y-4 text-ink-light">
+                  <li className="flex items-start gap-2">
+                    <span className="text-black font-bold mt-1">•</span>
+                    <span><strong className="text-black">教學領導力賦能：</strong>提供專業成長路徑，讓每一位老師成為點燃學生生命的火種。</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-black font-bold mt-1">•</span>
+                    <span><strong className="text-black">創新教學策略支援：</strong>協助教師發展多元教學方法，提升教學成效。</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-black font-bold mt-1">•</span>
+                    <span><strong className="text-black">改變校園的專業成長：</strong>建立教師社群，共同推動校園變革。</span>
+                  </li>
+                </ul>
+              </motion.div>
 
-              {/* 內文 */}
-              <div className="space-y-6">
-                <p className="text-lg leading-relaxed text-black/80">
-                  記得在某一場偏鄉高中的演講結束後，一位學生在台下等了很久。他低著頭對我說出了這句話。
-                </p>
-                
-                <p className="text-lg leading-relaxed text-black/80">
-                  那一刻，我意識到這不再只是一個「講座計畫」，而是一場「覺醒運動」。當我們在膠捲般的生命歷程中，按下暫停鍵，重新審視每一個格位時，我們才真正開始「活著」。
-                </p>
-                
-                <p className="text-lg leading-relaxed text-black font-medium">
-                  從那一場開始，我決定要把這套關於「選擇」的技術，帶進全台灣的每一間教室。
-                </p>
-              </div>
+              {/* C. 家長端 */}
+              <motion.div
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: "-50px" }}
+                variants={fadeInUp}
+                transition={{ delay: 0.2 }}
+                className="border-2 border-black bg-white p-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              >
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="p-3 border-2 border-black">
+                    <Heart className="w-6 h-6 text-black" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="font-serif text-2xl font-bold text-black">家長端</h3>
+                </div>
+                <ul className="space-y-4 text-ink-light">
+                  <li className="flex items-start gap-2">
+                    <span className="text-black font-bold mt-1">•</span>
+                    <span><strong className="text-black">親子溝通覺察引導：</strong>協助家長建立有效的親子溝通模式。</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-black font-bold mt-1">•</span>
+                    <span><strong className="text-black">成長型思維建立：</strong>培養家長與孩子共同成長的思維模式。</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-black font-bold mt-1">•</span>
+                    <span><strong className="text-black">家庭教育的長期支持：</strong>提供持續性的家庭教育資源與陪伴。</span>
+                  </li>
+                </ul>
+              </motion.div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ===== 區塊四：第三章 - 願景 ===== */}
-      <section className="py-20 sm:py-28 border-b-4 border-black">
-        <div className="max-w-3xl mx-auto px-6 sm:px-8 lg:px-12">
+      {/* ===== 第三章：我們想要做的事 ===== */}
+      <section className="py-24 border-b-2 border-black">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -243,70 +252,30 @@ export default function AboutPage() {
           >
             {/* 章節標題 */}
             <div className="mb-12">
-              <span className="text-xs uppercase tracking-widest text-black/40 font-bold block mb-3">
+              <span className="text-xs uppercase tracking-widest text-ink-muted font-bold block mb-3">
                 Chapter 03
               </span>
-              <h2 className="font-serif text-3xl sm:text-4xl font-black text-black leading-tight">
-                願景
-                <span className="block text-xl sm:text-2xl font-medium text-black/60 mt-2">
-                  —— 給你選擇，由你決定
-                </span>
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-black leading-tight mb-6">
+                我們想要做的事
               </h2>
-              <div className="w-24 h-1 bg-black mt-6" />
+              <div className="w-24 h-1 bg-black" />
             </div>
 
-            {/* 數據展示 */}
-            <div className="grid grid-cols-2 gap-6 mb-12">
-              <div className="border-4 border-black p-6 text-center">
-                <div className="font-serif text-5xl sm:text-6xl font-black text-black mb-2">100</div>
-                <div className="text-sm uppercase tracking-widest text-black/60 font-bold">所高中職</div>
-              </div>
-              <div className="border-4 border-black p-6 text-center">
-                <div className="font-serif text-5xl sm:text-6xl font-black text-black mb-2">10,000</div>
-                <div className="text-sm uppercase tracking-widest text-black/60 font-bold">個可能的改變</div>
-              </div>
-            </div>
-
-            {/* 內文 */}
-            <div className="space-y-6">
-              <p className="text-lg leading-relaxed text-black/80">
-                我們的目標很明確：在三年內，走遍全台灣一百所高中職。這不只是一個數字，而是代表著一萬個可能的改變。
-              </p>
-              
-              <p className="text-lg leading-relaxed text-black/80">
-                我們透過「專欄寫作」延續影響力，透過「實體講座」點燃火種，並透過「數位伴隨」讓資源不再有城鄉差距。
-              </p>
-              
-              <p className="text-lg leading-relaxed text-black/80">
-                我們相信，每一個生命都值得擁有一次「重新決定」的機會。而這一切，就從你邀請我們走進校園的那一刻開始。
-              </p>
-            </div>
-
-            {/* 三大支柱 */}
-            <div className="grid sm:grid-cols-3 gap-4 mt-12">
-              <div className="border-2 border-black p-6 text-center hover:bg-black hover:text-white transition-colors group">
-                <div className="text-3xl mb-3">📝</div>
-                <div className="text-sm uppercase tracking-widest font-bold">專欄寫作</div>
-                <div className="text-xs text-black/60 group-hover:text-white/60 mt-2">延續影響力</div>
-              </div>
-              <div className="border-2 border-black p-6 text-center hover:bg-black hover:text-white transition-colors group">
-                <div className="text-3xl mb-3">🎤</div>
-                <div className="text-sm uppercase tracking-widest font-bold">實體講座</div>
-                <div className="text-xs text-black/60 group-hover:text-white/60 mt-2">點燃火種</div>
-              </div>
-              <div className="border-2 border-black p-6 text-center hover:bg-black hover:text-white transition-colors group">
-                <div className="text-3xl mb-3">💻</div>
-                <div className="text-sm uppercase tracking-widest font-bold">數位伴隨</div>
-                <div className="text-xs text-black/60 group-hover:text-white/60 mt-2">消弭城鄉差距</div>
+            {/* 核心願景大區塊 */}
+            <div className="border-2 border-black bg-black text-paper p-12 sm:p-16 lg:p-20 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative">
+              <div className="max-w-4xl mx-auto text-center">
+                <p className="font-serif text-3xl sm:text-4xl lg:text-5xl italic font-bold leading-relaxed">
+                  改變校園，從老師開始。我們致力於培養教師的領導力，讓每一位老師成為點燃學生生命的火種。
+                </p>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ===== 區塊五：結尾簽名 ===== */}
-      <section className="py-20 sm:py-28">
-        <div className="max-w-3xl mx-auto px-6 sm:px-8 lg:px-12">
+      {/* ===== 結尾簽名 ===== */}
+      <section className="py-24 border-b-2 border-black">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -315,30 +284,35 @@ export default function AboutPage() {
             className="text-right"
           >
             <div className="inline-block">
-              <p className="text-sm uppercase tracking-widest text-black/40 font-bold mb-4">
+              <p className="text-sm uppercase tracking-widest text-ink-muted font-bold mb-4">
                 創辦人
               </p>
               <p 
-                className="font-serif text-3xl sm:text-4xl italic text-black mb-4"
-                style={{ fontFamily: 'Playfair Display, Georgia, serif' }}
+                className="font-serif text-3xl sm:text-4xl italic text-black mb-6"
+                style={{ 
+                  fontFamily: 'Playfair Display, Georgia, serif',
+                  fontStyle: 'italic'
+                }}
               >
-                Peter Li
+                李柏賢
               </p>
-              {/* 手繪墨水線 */}
+              {/* 手繪墨水筆劃 */}
               <svg 
-                width="200" 
-                height="20" 
-                viewBox="0 0 200 20" 
+                width="250" 
+                height="30" 
+                viewBox="0 0 250 30" 
                 className="ml-auto"
+                style={{ filter: 'drop-shadow(2px 2px 0px rgba(0,0,0,0.3))' }}
               >
                 <path 
-                  d="M0 10 Q 30 5, 60 12 T 120 8 T 180 12 L 200 10" 
+                  d="M0 15 Q 40 8, 80 18 T 160 12 T 240 18 L 250 15" 
                   stroke="black" 
-                  strokeWidth="2" 
+                  strokeWidth="3" 
                   fill="none"
                   strokeLinecap="round"
+                  strokeLinejoin="round"
                   style={{
-                    strokeDasharray: '200',
+                    strokeDasharray: '250',
                     strokeDashoffset: '0'
                   }}
                 />
@@ -348,28 +322,224 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ===== CTA 區塊 ===== */}
-      <section className="py-16 bg-black text-white border-t-8 border-black">
-        <div className="max-w-3xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={fadeInUp}
-          >
-            <h3 className="font-serif text-2xl sm:text-3xl font-bold mb-6">
-              準備好讓改變發生了嗎？
-            </h3>
-            <a 
-              href="/lecture-request"
-              className="inline-flex items-center gap-3 bg-white text-black px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-transparent hover:text-white border-2 border-white transition-colors"
-            >
-              邀請我們走進校園
-              <span className="text-lg">→</span>
-            </a>
-          </motion.div>
-        </div>
-      </section>
+      {/* ===== 第四章：諮詢表單 ===== */}
+      <InquiryFormSection />
     </div>
+  )
+}
+
+// 諮詢表單組件
+function InquiryFormSection() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    organization: '',
+    content: '',
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      // 如果有單位，將單位資訊包含在內容中
+      const contentWithOrg = formData.organization 
+        ? `【單位】${formData.organization}\n\n${formData.content}`
+        : formData.content
+
+      const response = await fetch('/api/faq-inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          content: contentWithOrg,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setIsSuccess(true)
+        setFormData({
+          name: '',
+          email: '',
+          organization: '',
+          content: '',
+        })
+      } else {
+        alert('提交失敗：' + (result.error || '未知錯誤'))
+      }
+    } catch (error) {
+      console.error('提交錯誤:', error)
+      alert('提交時發生錯誤，請稍後再試')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }))
+  }
+
+  return (
+    <section className="py-24 bg-paper">
+      <div className="max-w-4xl mx-auto px-6 sm:px-8 lg:px-12">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={fadeInUp}
+          className="relative"
+        >
+          {/* 復古投書明信片風格 */}
+          <div className="border-2 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative">
+            {/* 郵票裝飾（右上角） */}
+            <div className="absolute -top-4 -right-4 z-10">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-black bg-paper rotate-12 flex items-center justify-center">
+                <Mail className="w-8 h-8 sm:w-10 sm:h-10 text-black" strokeWidth={1.5} />
+              </div>
+            </div>
+
+            <div className="p-8 sm:p-12 pt-16 sm:pt-20">
+              {/* 引導文字 */}
+              <div className="mb-8 text-center">
+                <p className="text-lg sm:text-xl text-ink-light leading-relaxed">
+                  看完我們的故事，若您有任何講座邀約、公益需求或教育諮詢，請直接給我們一封信。
+                </p>
+              </div>
+
+              {isSuccess ? (
+                <div className="text-center py-12">
+                  <div className="mb-6 flex justify-center">
+                    <div className="p-4 border-2 border-black bg-black text-paper rounded-full">
+                      <CheckCircle className="w-12 h-12" strokeWidth={1.5} />
+                    </div>
+                  </div>
+                  <h3 className="font-serif text-2xl sm:text-3xl font-bold text-black mb-4">
+                    您的訊息已送出
+                  </h3>
+                  <p className="text-lg text-ink-muted leading-relaxed mb-8">
+                    我們將儘速回覆。
+                  </p>
+                  <button
+                    onClick={() => setIsSuccess(false)}
+                    className="btn-editorial-outline"
+                  >
+                    <span>送出另一封信</span>
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* 姓名 */}
+                  <div>
+                    <label
+                      htmlFor="inquiry-name"
+                      className="block text-sm font-medium uppercase tracking-wider text-black mb-2"
+                    >
+                      您的姓名
+                    </label>
+                    <input
+                      type="text"
+                      id="inquiry-name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      placeholder="請輸入您的姓名"
+                      className="w-full px-4 py-3 bg-paper border-2 border-black text-black placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-black text-base"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label
+                      htmlFor="inquiry-email"
+                      className="block text-sm font-medium uppercase tracking-wider text-black mb-2"
+                    >
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      id="inquiry-email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      placeholder="your.email@example.com"
+                      className="w-full px-4 py-3 bg-paper border-2 border-black text-black placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-black text-base"
+                    />
+                  </div>
+
+                  {/* 單位 */}
+                  <div>
+                    <label
+                      htmlFor="inquiry-organization"
+                      className="block text-sm font-medium uppercase tracking-wider text-black mb-2"
+                    >
+                      單位
+                    </label>
+                    <input
+                      type="text"
+                      id="inquiry-organization"
+                      name="organization"
+                      value={formData.organization}
+                      onChange={handleChange}
+                      placeholder="例如：XX 高中、XX 教育基金會..."
+                      className="w-full px-4 py-3 bg-paper border-2 border-black text-black placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-black text-base"
+                    />
+                  </div>
+
+                  {/* 訊息內容 */}
+                  <div>
+                    <label
+                      htmlFor="inquiry-content"
+                      className="block text-sm font-medium uppercase tracking-wider text-black mb-2"
+                    >
+                      訊息內容
+                    </label>
+                    <textarea
+                      id="inquiry-content"
+                      name="content"
+                      value={formData.content}
+                      onChange={handleChange}
+                      required
+                      rows={8}
+                      placeholder="請描述您的需求或疑問..."
+                      className="w-full px-4 py-3 bg-paper border-2 border-black text-black placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-black resize-none text-base"
+                    />
+                  </div>
+
+                  {/* 提交按鈕 */}
+                  <div className="pt-4">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="btn-editorial w-full sm:w-auto"
+                    >
+                      {isSubmitting ? (
+                        <span>寄送中...</span>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" strokeWidth={1.5} />
+                          <span>寄出這封信</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
   )
 }

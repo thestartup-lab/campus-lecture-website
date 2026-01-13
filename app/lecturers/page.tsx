@@ -17,9 +17,10 @@ interface Lecturer {
 async function getLecturers(): Promise<Lecturer[]> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, display_name, title, bio, avatar_url, expertise, is_approved, is_public')
+    .select('id, full_name, display_name, title, bio, avatar_url, expertise, is_approved, is_public, role')
     .eq('is_approved', true)
-    .eq('role', 'instructor')
+    .eq('is_public', true)
+    .in('role', ['instructor', 'admin'])
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -82,6 +83,20 @@ export default async function LecturersPage() {
             我們的講師來自各個專業領域，擁有豐富的教學經驗與實務背景，
             致力於為學生帶來啟發性的學習體驗。
           </p>
+        </div>
+      </section>
+
+      {/* 引導說明 */}
+      <section className="py-12 border-b-2 border-black">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="border-2 border-black bg-white p-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-black mb-4">
+              尋找您的生命導師
+            </h2>
+            <p className="text-base sm:text-lg text-ink-muted leading-relaxed">
+              我們提供專業的講師媒合服務。您可以點擊下方頭像進入講師個人簡介，了解其專業背景；若有特定的講座需求或諮詢，請進入個人頁面後於下方留言與講師連繫。
+            </p>
+          </div>
         </div>
       </section>
 

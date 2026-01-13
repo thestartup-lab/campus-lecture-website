@@ -8,6 +8,7 @@ import {
   BookOpen,
   Quote
 } from 'lucide-react'
+import LecturerInquiryForm from '@/components/LecturerInquiryForm'
 
 interface Experience {
   title: string
@@ -306,6 +307,16 @@ export default async function LecturerPage({ params }: { params: Promise<{ id: s
           </div>
         </section>
       )}
+
+      {/* 給導師的一封信 */}
+      <section className="py-24 border-b-2 border-black">
+        <div className="max-w-4xl mx-auto px-6 sm:px-8 lg:px-12">
+          <LecturerInquiryForm 
+            lecturerId={lecturer.id}
+            lecturerName={lecturer.display_name || lecturer.full_name}
+          />
+        </div>
+      </section>
 
       {/* CTA */}
       <section className="py-24 bg-black text-paper">

@@ -1,8 +1,29 @@
+'use client'
+
 import Link from 'next/link'
 import { BookOpen, Mail, Phone, MapPin, ArrowUpRight } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
+  const [settings, setSettings] = useState<Record<string, string | number>>({})
+
+  useEffect(() => {
+    fetch('/api/site-settings')
+      .then(res => res.json())
+      .then(result => {
+        if (result.success && result.data) {
+          setSettings(result.data)
+        }
+      })
+      .catch(err => console.error('載入網站設定錯誤:', err))
+  }, [])
+
+  const siteName = (settings.site_name as string) || '校園講座'
+  const footerEmail = (settings.footer_email as string) || 'info@campuslecture.com'
+  const footerPhone = (settings.footer_phone as string) || '(02) 1234-5678'
+  const footerAddress = (settings.footer_address as string) || '台北市大安區'
+  const footerDescription = (settings.footer_description as string) || '致力於連結專業講師與校園，為學生帶來啟發性的學習體驗。'
   
   const links = {
     navigation: [
@@ -12,10 +33,10 @@ export default function Footer() {
       { name: '邀約', href: '/lecture-request' },
     ],
     services: [
-      { name: '講座規劃', href: '#' },
-      { name: '講師媒合', href: '#' },
-      { name: '教育資源', href: '#' },
-      { name: '常見問題', href: '#' },
+      { name: '講座規劃', href: '/services/planning' },
+      { name: '講師媒合', href: '/lecturers' },
+      { name: '教育資源', href: '/resources' },
+      { name: '常見問題', href: '/faq' },
     ],
   }
 
@@ -29,23 +50,27 @@ export default function Footer() {
               <div className="w-12 h-12 bg-black text-paper flex items-center justify-center">
                 <BookOpen className="w-6 h-6" strokeWidth={1.5} />
               </div>
-              <span className="font-serif text-2xl font-bold">校園講座</span>
+              <span className="font-serif text-2xl font-bold">{siteName}</span>
             </Link>
             <p className="text-ink-muted text-sm leading-relaxed mb-6">
-              致力於連結專業講師與校園，為學生帶來啟發性的學習體驗。
+              {footerDescription}
             </p>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2 text-ink-muted">
                 <Mail className="w-4 h-4" strokeWidth={1.5} />
-                <span>info@campuslecture.com</span>
+                <a href={`mailto:${footerEmail}`} className="hover:text-black transition-colors">
+                  {footerEmail}
+                </a>
               </div>
               <div className="flex items-center gap-2 text-ink-muted">
                 <Phone className="w-4 h-4" strokeWidth={1.5} />
-                <span>(02) 1234-5678</span>
+                <a href={`tel:${footerPhone}`} className="hover:text-black transition-colors">
+                  {footerPhone}
+                </a>
               </div>
               <div className="flex items-center gap-2 text-ink-muted">
                 <MapPin className="w-4 h-4" strokeWidth={1.5} />
-                <span>台北市大安區</span>
+                <span>{footerAddress}</span>
               </div>
             </div>
           </div>
@@ -105,7 +130,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-16 pt-8 border-t-2 border-black flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-xs text-ink-muted uppercase tracking-wider">
-            © {currentYear} Campus Lecture Program. All rights reserved.
+            © {currentYear} {siteName}. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-xs text-ink-muted uppercase tracking-wider">
             <Link href="#" className="hover:text-black transition-colors">隱私政策</Link>

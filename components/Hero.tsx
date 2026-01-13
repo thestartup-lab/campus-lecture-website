@@ -52,9 +52,28 @@ function useCountUp(end: number, duration: number = 2000, start: number = 0) {
 }
 
 export default function Hero() {
-  const lecturers = useCountUp(20, 1500)
-  const lectures = useCountUp(1200, 2000)
-  const students = useCountUp(50, 1800)
+  const [settings, setSettings] = useState<Record<string, string | number>>({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/site-settings')
+      .then(res => res.json())
+      .then(result => {
+        if (result.success && result.data) {
+          setSettings(result.data)
+        }
+      })
+      .catch(err => console.error('載入網站設定錯誤:', err))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const lecturersCount = typeof settings.hero_lecturers_count === 'number' ? settings.hero_lecturers_count : 20
+  const lecturesCount = typeof settings.hero_lectures_count === 'number' ? settings.hero_lectures_count : 1200
+  const studentsCount = typeof settings.hero_students_count === 'number' ? settings.hero_students_count : 50
+
+  const lecturers = useCountUp(lecturersCount, 1500)
+  const lectures = useCountUp(lecturesCount, 2000)
+  const students = useCountUp(studentsCount, 1800)
 
   return (
     <section className="relative bg-paper overflow-hidden">

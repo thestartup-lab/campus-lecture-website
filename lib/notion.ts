@@ -13,6 +13,7 @@ const notion = new Client({
 const LECTURE_APPLICATIONS_DB_ID = process.env.NOTION_LECTURE_APPLICATIONS_DB_ID || ''
 const POSTS_DB_ID = process.env.NOTION_POSTS_DB_ID || ''
 const TESTIMONIALS_DB_ID = process.env.NOTION_TESTIMONIALS_DB_ID || ''
+const SITE_SETTINGS_DB_ID = process.env.NOTION_SITE_SETTINGS_DB_ID || ''
 
 // ========================================
 // 類型定義
@@ -512,40 +513,40 @@ export async function createPost(
       throw new Error('無法取得文章資料來源 ID')
     }
 
+    // 建立基本屬性
+    const properties: Record<string, unknown> = {
+      '文章標題': {
+        title: [{ text: { content: data.title } }],
+      },
+      '摘要': {
+        rich_text: [{ text: { content: data.excerpt || '' } }],
+      },
+      '作者': {
+        rich_text: [{ text: { content: data.author } }],
+      },
+      '作者ID': {
+        rich_text: [{ text: { content: data.authorId || '' } }],
+      },
+      '分類': {
+        select: { name: data.category },
+      },
+      '封面照片': {
+        url: data.imageUrl || null,
+      },
+      '文章狀態': {
+        status: { name: data.status },
+      },
+      '精選': {
+        checkbox: data.featured || false,
+      },
+    }
+
     const response = await notion.pages.create({
       parent: {
         type: 'data_source_id',
         data_source_id: dataSourceId,
       },
-      properties: {
-        '文章標題': {
-          title: [{ text: { content: data.title } }],
-        },
-        '摘要': {
-          rich_text: [{ text: { content: data.excerpt || '' } }],
-        },
-        '內容': {
-          rich_text: [{ text: { content: data.content } }],
-        },
-        '作者': {
-          rich_text: [{ text: { content: data.author } }],
-        },
-        '作者ID': {
-          rich_text: [{ text: { content: data.authorId || '' } }],
-        },
-        '分類': {
-          select: { name: data.category },
-        },
-        '封面照片': {
-          url: data.imageUrl || null,
-        },
-        '文章狀態': {
-          status: { name: data.status },
-        },
-        '精選': {
-          checkbox: data.featured || false,
-        },
-      },
+      properties,
     })
 
     return {
@@ -577,9 +578,11 @@ export async function updatePost(
     if (data.excerpt !== undefined) {
       properties['摘要'] = { rich_text: [{ text: { content: data.excerpt } }] }
     }
-    if (data.content !== undefined) {
-      properties['內容'] = { rich_text: [{ text: { content: data.content } }] }
-    }
+    // 注意：內容應該寫在 Notion 頁面的 body 中，而不是屬性欄位
+    // 如果資料庫有「內容」欄位，可以取消下方註解
+    // if (data.content !== undefined) {
+    //   properties['內容'] = { rich_text: [{ text: { content: data.content } }] }
+    // }
     if (data.author !== undefined) {
       properties['作者'] = { rich_text: [{ text: { content: data.author } }] }
     }
@@ -1158,6 +1161,212 @@ function getCheckbox(prop: unknown): boolean {
 function getCreatedTime(prop: unknown): string {
   const createdTimeProp = prop as { created_time?: string }
   return createdTimeProp?.created_time || ''
+}
+
+// ========================================
+// Site Settings (網站設定)
+// ========================================
+
+export interface SiteSettings {
+  [key: string]: string | number
+}
+
+/**
+ * 取得所有網站設定
+ */
+export async function getSiteSettings(): Promise<{ success: boolean; data?: SiteSettings; error?: string }> {
+  try {
+    if (!SITE_SETTINGS_DB_ID) {
+      return {
+        success: false,
+        error: 'NOTION_SITE_SETTINGS_DB_ID 環境變數未設定',
+      }
+    }
+
+    const dataSourceId = await getDataSourceId(SITE_SETTINGS_DB_ID)
+    if (!dataSourceId) {
+      return {
+        success: false,
+        error: '無法取得資料來源 ID',
+      }
+    }
+
+    const response = await notion.dataSources.query({
+      data_source_id: dataSourceId,
+      page_size: 100,
+    })
+
+    const settings: SiteSettings = {}
+    
+    for (const page of response.results) {
+      const props = (page as unknown as { properties: Record<string, unknown> }).properties
+      const key = getTitle(props['Key'] || props['設定鍵'] || props['key'])
+      const value = getRichText(props['Value'] || props['設定值'] || props['value'])
+      
+      if (key) {
+        // 嘗試轉換為數字（如果是統計數字）
+        const numValue = Number(value)
+        settings[key] = !isNaN(numValue) && value.trim() !== '' ? numValue : value
+      }
+    }
+
+    return { success: true, data: settings }
+  } catch (error) {
+    console.error('取得網站設定失敗:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '未知錯誤',
+    }
+  }
+}
+
+/**
+ * 更新網站設定
+ */
+export async function updateSiteSetting(
+  key: string,
+  value: string | number
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!SITE_SETTINGS_DB_ID) {
+      return {
+        success: false,
+        error: 'NOTION_SITE_SETTINGS_DB_ID 環境變數未設定',
+      }
+    }
+
+    const dataSourceId = await getDataSourceId(SITE_SETTINGS_DB_ID)
+    if (!dataSourceId) {
+      return {
+        success: false,
+        error: '無法取得資料來源 ID',
+      }
+    }
+
+    // 先查詢所有記錄，然後在記憶體中過濾
+    const allResponse = await notion.dataSources.query({
+      data_source_id: dataSourceId,
+      page_size: 100,
+    })
+    
+    // 在記憶體中查找匹配的記錄
+    const response = {
+      results: allResponse.results.filter((page: unknown) => {
+        const props = (page as { properties: Record<string, unknown> }).properties
+        const pageKey = getTitle(props['Key'] || props['設定鍵'] || props['key'])
+        return pageKey === key
+      }),
+    }
+
+    const valueStr = String(value)
+
+    if (response.results.length > 0) {
+      // 更新現有記錄（嘗試中文，失敗則用英文）
+      const pageId = response.results[0].id
+      try {
+        await notion.pages.update({
+          page_id: pageId,
+          properties: {
+            '設定值': {
+              rich_text: [
+                {
+                  text: {
+                    content: valueStr,
+                  },
+                },
+              ],
+            },
+          },
+        })
+      } catch (e) {
+        // 如果中文屬性不存在，使用英文
+        const error = e as Error
+        console.log('嘗試使用英文屬性名稱更新:', error.message)
+        await notion.pages.update({
+          page_id: pageId,
+          properties: {
+            'Value': {
+              rich_text: [
+                {
+                  text: {
+                    content: valueStr,
+                  },
+                },
+              ],
+            },
+          },
+        })
+      }
+    } else {
+      // 建立新記錄（嘗試中文，失敗則用英文）
+      try {
+        await notion.pages.create({
+          parent: {
+            type: 'data_source_id',
+            data_source_id: dataSourceId,
+          },
+          properties: {
+            '設定鍵': {
+              title: [
+                {
+                  text: {
+                    content: key,
+                  },
+                },
+              ],
+            },
+            '設定值': {
+              rich_text: [
+                {
+                  text: {
+                    content: valueStr,
+                  },
+                },
+              ],
+            },
+          },
+        })
+      } catch (e) {
+        // 如果中文屬性不存在，使用英文
+        const error = e as Error
+        console.log('嘗試使用英文屬性名稱建立:', error.message)
+        await notion.pages.create({
+          parent: {
+            type: 'data_source_id',
+            data_source_id: dataSourceId,
+          },
+          properties: {
+            'Key': {
+              title: [
+                {
+                  text: {
+                    content: key,
+                  },
+                },
+              ],
+            },
+            'Value': {
+              rich_text: [
+                {
+                  text: {
+                    content: valueStr,
+                  },
+                },
+              ],
+            },
+          },
+        })
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('更新網站設定失敗:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '未知錯誤',
+    }
+  }
 }
 
 // 匯出 Notion 客戶端供其他用途

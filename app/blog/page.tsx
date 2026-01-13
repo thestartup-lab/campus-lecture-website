@@ -1,6 +1,17 @@
-import { Calendar, User, ArrowUpRight } from 'lucide-react'
+import { Calendar, User, ArrowUpRight, Star, BookOpen } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getPosts } from '@/lib/notion'
+
+// 類別封面圖片映射
+const categoryImages: Record<string, string> = {
+  '教育理念': '/images/categories/education.png',
+  '班級經營': '/images/categories/classroom.png',
+  '親子溝通': '/images/categories/parenting.png',
+  '教學技巧': '/images/categories/teaching.png',
+  '職涯發展': '/images/categories/career.png',
+  '生涯規劃': '/images/categories/life-planning.png',
+}
 
 // 假資料（暫時使用，當 Notion 沒有資料時顯示）
 const MOCK_ARTICLES = [
@@ -12,6 +23,7 @@ const MOCK_ARTICLES = [
     date: '2024-01-15',
     category: '教育創新',
     image_url: '/images/lightbulb.jpeg',
+    featured: true,
     content: '',
   },
   {
@@ -22,6 +34,7 @@ const MOCK_ARTICLES = [
     date: '2024-01-10',
     category: '科技教育',
     image_url: null,
+    featured: false,
     content: '',
   },
   {
@@ -32,6 +45,7 @@ const MOCK_ARTICLES = [
     date: '2024-01-05',
     category: '永續發展',
     image_url: null,
+    featured: false,
     content: '',
   },
 ]
@@ -57,6 +71,7 @@ async function getArticles() {
       date: article.createdAt ? new Date(article.createdAt).toISOString().split('T')[0] : '',
       category: article.category,
       image_url: article.imageUrl,
+      featured: article.featured || false,
       content: article.content,
     }))
   } catch (error) {
@@ -125,29 +140,30 @@ export default async function BlogPage() {
 
                 {/* Image Area - Full Bleed 50% */}
                 <div className="relative aspect-[4/3] overflow-hidden">
+                  {/* 優先使用文章封面圖，其次使用類別圖片，最後使用預設 */}
                   {article.image_url ? (
-                    <img
+                    <Image
                       src={article.image_url}
                       alt={article.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      style={{
-                        filter: 'grayscale(100%) contrast(110%) brightness(95%)'
-                      }}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : categoryImages[article.category] ? (
+                    <Image
+                      src={categoryImages[article.category]}
+                      alt={article.category}
+                      fill
+                      className="object-contain p-6 transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div 
-                      className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"
-                      style={{
-                        filter: 'grayscale(100%) contrast(110%) brightness(95%)'
-                      }}
-                    >
-                      <span className="text-8xl opacity-20">📰</span>
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 transition-transform duration-500 group-hover:scale-105">
+                      <BookOpen className="w-20 h-20 text-black/10" strokeWidth={1} />
                     </div>
                   )}
                   
                   {/* Grainy Paper Texture Overlay */}
                   <div 
-                    className="absolute inset-0 pointer-events-none"
+                    className="absolute inset-0 pointer-events-none z-10"
                     style={{
                       backgroundImage: `url('https://grainy-gradients.vercel.app/noise.svg')`,
                       opacity: 0.15
@@ -155,10 +171,16 @@ export default async function BlogPage() {
                   />
                   
                   {/* Category Badge - Bottom Left, Overlapping Border */}
-                  <div className="absolute -bottom-3 left-4 z-20">
+                  <div className="absolute -bottom-3 left-4 z-20 flex items-center gap-2">
                     <span className="inline-block px-4 py-2 bg-black text-white text-xs font-bold uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
                       {article.category}
                     </span>
+                    {article.featured && (
+                      <span className="inline-flex items-center gap-1 px-3 py-2 bg-black text-white text-xs font-bold uppercase tracking-widest shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)]">
+                        <Star className="w-3 h-3" strokeWidth={1.5} fill="currentColor" />
+                        精選
+                      </span>
+                    )}
                   </div>
                 </div>
 

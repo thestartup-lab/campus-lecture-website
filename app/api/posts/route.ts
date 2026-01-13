@@ -63,10 +63,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    // 驗證必要欄位
-    if (!body.title || !body.content || !body.author || !body.category) {
+    // 驗證必要欄位（content 為選填，可以在 Notion 中編輯）
+    if (!body.title || !body.author || !body.category) {
       return NextResponse.json(
-        { success: false, error: '缺少必要欄位：title, content, author, category' },
+        { success: false, error: '缺少必要欄位：title, author, category' },
         { status: 400 }
       )
     }
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     const postData: NotionPost = {
       title: body.title,
       excerpt: body.excerpt || '',
-      content: body.content,
+      content: body.content || '', // content 為選填
       author: body.author,
       authorId: body.authorId || '',
       category: body.category,
