@@ -1355,7 +1355,7 @@ export default function AdminPage() {
                         file:transition-colors file:cursor-pointer"
                     />
                     <p className="text-xs text-ink-muted mt-2">
-                      建議尺寸：400×400 像素，正方形比例最佳
+                      建議尺寸：1200×900 像素（4:3 比例），支援 JPG、PNG 格式
                     </p>
                   </div>
                 </div>
