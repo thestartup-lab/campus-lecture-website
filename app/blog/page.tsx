@@ -3,6 +3,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { getPosts } from '@/lib/notion'
 
+// 強制動態渲染，不使用快取
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // 類別封面圖片映射
 const categoryImages: Record<string, string> = {
   '教育理念': '/images/categories/education.png',
