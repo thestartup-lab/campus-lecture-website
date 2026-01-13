@@ -260,9 +260,9 @@ export default function LoginPage() {
           {isLogin && (
             <p className="mt-6 text-center text-sm text-ink-muted">
               忘記密碼？{' '}
-              <button className="text-black hover:underline font-medium">
+              <Link href="/forgot-password" className="text-black hover:underline font-medium">
                 重設密碼
-              </button>
+              </Link>
             </p>
           )}
         </div>

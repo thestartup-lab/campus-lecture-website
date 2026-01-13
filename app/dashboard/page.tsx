@@ -23,6 +23,7 @@ import {
   Edit3,
   Trash2,
   Eye,
+  EyeOff,
   X,
   Save,
   BookOpen,
@@ -32,7 +33,8 @@ import {
   ToggleRight,
   Star,
   Globe,
-  HelpCircle
+  HelpCircle,
+  Lock
 } from 'lucide-react'
 
 // 動態載入富文本編輯器（避免 SSR 問題）
@@ -190,6 +192,19 @@ export default function DashboardPage() {
   const [newExpertise, setNewExpertise] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+
+  // 更改密碼 state
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
 
   // Site Settings state
   const [siteSettings, setSiteSettings] = useState<Record<string, string | number>>({})
@@ -906,6 +921,74 @@ export default function DashboardPage() {
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  // 更改密碼
+  const handleChangePassword = async () => {
+    setPasswordError(null)
+    setPasswordSuccess(false)
+
+    // 驗證
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordError('請填寫所有欄位')
+      return
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError('新密碼至少需要 6 個字元')
+      return
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('兩次輸入的新密碼不一致')
+      return
+    }
+
+    setChangingPassword(true)
+
+    try {
+      // 先用當前密碼重新驗證
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: passwordForm.currentPassword,
+      })
+
+      if (signInError) {
+        setPasswordError('目前密碼不正確')
+        setChangingPassword(false)
+        return
+      }
+
+      // 更新密碼
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: passwordForm.newPassword,
+      })
+
+      if (updateError) {
+        setPasswordError(updateError.message)
+        setChangingPassword(false)
+        return
+      }
+
+      // 成功
+      setPasswordSuccess(true)
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      })
+      
+      // 3 秒後關閉 Modal
+      setTimeout(() => {
+        setShowChangePassword(false)
+        setPasswordSuccess(false)
+      }, 2000)
+
+    } catch {
+      setPasswordError('發生未知錯誤，請稍後再試')
+    }
+
+    setChangingPassword(false)
   }
 
   // 新增專長
@@ -1644,6 +1727,24 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 )}
+
+                {/* 更改密碼 */}
+                <div className="border-t-2 border-black pt-6">
+                  <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                    帳號安全
+                  </label>
+                  <p className="text-sm text-ink-muted mb-4">
+                    定期更換密碼可以保護您的帳號安全
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowChangePassword(true)}
+                    className="btn-editorial-outline"
+                  >
+                    <Lock className="w-4 h-4" strokeWidth={1.5} />
+                    <span>更改密碼</span>
+                  </button>
+                </div>
               </div>
             </>
           ) : activeTab === 'articles' ? (
@@ -2838,6 +2939,145 @@ export default function DashboardPage() {
                 )}
                 <span>{savingArticle ? '儲存中...' : (editingArticle ? '更新文章' : '發布文章')}</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 更改密碼 Modal */}
+      {showChangePassword && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-paper border-2 border-black shadow-hard max-w-md w-full">
+            <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-black">更改密碼</h3>
+                <p className="text-sm text-ink-muted">請輸入目前密碼和新密碼</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowChangePassword(false)
+                  setPasswordError(null)
+                  setPasswordSuccess(false)
+                  setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+                }}
+                className="p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
+              >
+                <X className="w-5 h-5" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {passwordSuccess ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto mb-6 border-2 border-black bg-black flex items-center justify-center">
+                    <CheckCircle className="w-8 h-8 text-paper" strokeWidth={1.5} />
+                  </div>
+                  <h4 className="font-serif text-xl font-bold text-black mb-2">
+                    密碼已更新！
+                  </h4>
+                  <p className="text-ink-muted">
+                    您的密碼已成功更改
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* 目前密碼 */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-black mb-2">
+                      <Lock className="w-4 h-4" strokeWidth={1.5} />
+                      目前密碼
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showCurrentPassword ? 'text' : 'password'}
+                        value={passwordForm.currentPassword}
+                        onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                        className="input-editorial pr-12"
+                        placeholder="請輸入目前密碼"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-muted hover:text-black transition-colors"
+                      >
+                        {showCurrentPassword ? <EyeOff className="w-5 h-5" strokeWidth={1.5} /> : <Eye className="w-5 h-5" strokeWidth={1.5} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 新密碼 */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-black mb-2">
+                      <Lock className="w-4 h-4" strokeWidth={1.5} />
+                      新密碼
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={passwordForm.newPassword}
+                        onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                        className="input-editorial pr-12"
+                        placeholder="至少 6 個字元"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-muted hover:text-black transition-colors"
+                      >
+                        {showNewPassword ? <EyeOff className="w-5 h-5" strokeWidth={1.5} /> : <Eye className="w-5 h-5" strokeWidth={1.5} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 確認新密碼 */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-black mb-2">
+                      <Lock className="w-4 h-4" strokeWidth={1.5} />
+                      確認新密碼
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      className="input-editorial"
+                      placeholder="再次輸入新密碼"
+                    />
+                  </div>
+
+                  {/* 錯誤訊息 */}
+                  {passwordError && (
+                    <div className="p-4 border-2 border-black bg-red-50 text-red-800 text-sm">
+                      {passwordError}
+                    </div>
+                  )}
+
+                  {/* 按鈕 */}
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t-2 border-black">
+                    <button
+                      onClick={() => {
+                        setShowChangePassword(false)
+                        setPasswordError(null)
+                        setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+                      }}
+                      className="btn-editorial-outline"
+                    >
+                      <span>取消</span>
+                    </button>
+                    <button
+                      onClick={handleChangePassword}
+                      disabled={changingPassword}
+                      className="btn-editorial"
+                    >
+                      {changingPassword ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={1.5} />
+                      ) : (
+                        <CheckCircle className="w-4 h-4" strokeWidth={1.5} />
+                      )}
+                      <span>{changingPassword ? '更新中...' : '更新密碼'}</span>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
