@@ -541,12 +541,13 @@ export async function createPost(
       },
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await notion.pages.create({
       parent: {
         type: 'data_source_id',
         data_source_id: dataSourceId,
       },
-      properties,
+      properties: properties as any,
     })
 
     return {
