@@ -29,6 +29,13 @@ import {
   EyeOff
 } from 'lucide-react'
 
+interface Experience {
+  title: string
+  organization: string
+  date: string
+  description?: string
+}
+
 interface Instructor {
   id: string
   full_name: string | null
@@ -39,8 +46,12 @@ interface Instructor {
   bio: string | null
   bio_long: string | null
   expertise: string[] | null
+  experiences: Experience[] | null
+  avatar_url: string | null
+  social_links: Record<string, string> | null
   role: string
   is_approved: boolean
+  is_public: boolean
   created_at: string
   approved_at: string | null
 }
@@ -89,6 +100,27 @@ export default function AdminPage() {
     expertise: [] as string[],
   })
   const [newExpertise, setNewExpertise] = useState('')
+
+  // 編輯講師 Modal
+  const [editingInstructor, setEditingInstructor] = useState<Instructor | null>(null)
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState({
+    display_name: '',
+    full_name: '',
+    title: '',
+    phone: '',
+    bio: '',
+    bio_long: '',
+    expertise: [] as string[],
+    experiences: [] as Experience[],
+    is_public: false,
+    avatar_url: '',
+    social_links: {} as Record<string, string>,
+  })
+  const [editExpertise, setEditExpertise] = useState('')
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
   // 檢查權限
   useEffect(() => {
@@ -372,6 +404,157 @@ export default function AdminPage() {
     }))
   }
 
+  // 開啟編輯講師 Modal
+  const openEditModal = (instructor: Instructor) => {
+    setEditingInstructor(instructor)
+    setEditForm({
+      display_name: instructor.display_name || '',
+      full_name: instructor.full_name || '',
+      title: instructor.title || '',
+      phone: instructor.phone || '',
+      bio: instructor.bio || '',
+      bio_long: instructor.bio_long || '',
+      expertise: instructor.expertise || [],
+      experiences: instructor.experiences || [],
+      is_public: instructor.is_public || false,
+      avatar_url: instructor.avatar_url || '',
+      social_links: instructor.social_links || {},
+    })
+    setAvatarPreview(instructor.avatar_url || null)
+    setAvatarFile(null)
+    setEditError(null)
+  }
+
+  // 關閉編輯 Modal
+  const closeEditModal = () => {
+    setEditingInstructor(null)
+    setEditError(null)
+    setAvatarFile(null)
+    setAvatarPreview(null)
+  }
+
+  // 處理頭像選擇
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setAvatarFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // 編輯專長操作
+  const addEditExpertise = () => {
+    if (editExpertise.trim() && !editForm.expertise.includes(editExpertise.trim())) {
+      setEditForm(prev => ({
+        ...prev,
+        expertise: [...prev.expertise, editExpertise.trim()]
+      }))
+      setEditExpertise('')
+    }
+  }
+
+  const removeEditExpertise = (skill: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      expertise: prev.expertise.filter(s => s !== skill)
+    }))
+  }
+
+  // 經歷操作
+  const addExperience = () => {
+    setEditForm(prev => ({
+      ...prev,
+      experiences: [...prev.experiences, { title: '', organization: '', date: '', description: '' }]
+    }))
+  }
+
+  const updateExperience = (index: number, field: keyof Experience, value: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      experiences: prev.experiences.map((exp, i) => 
+        i === index ? { ...exp, [field]: value } : exp
+      )
+    }))
+  }
+
+  const removeExperience = (index: number) => {
+    setEditForm(prev => ({
+      ...prev,
+      experiences: prev.experiences.filter((_, i) => i !== index)
+    }))
+  }
+
+  // 儲存編輯
+  const saveInstructorEdit = async () => {
+    if (!editingInstructor) return
+    
+    setSavingEdit(true)
+    setEditError(null)
+
+    try {
+      let avatarUrl = editForm.avatar_url
+
+      // 如果有新頭像，先上傳
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop()
+        const fileName = `${editingInstructor.id}-${Date.now()}.${fileExt}`
+        const filePath = `avatars/${fileName}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, avatarFile, { upsert: true })
+
+        if (uploadError) {
+          throw new Error(`頭像上傳失敗：${uploadError.message}`)
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath)
+
+        avatarUrl = urlData.publicUrl
+      }
+
+      // 更新講師資料
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          display_name: editForm.display_name || null,
+          full_name: editForm.full_name || null,
+          title: editForm.title || null,
+          phone: editForm.phone || null,
+          bio: editForm.bio || null,
+          bio_long: editForm.bio_long || null,
+          expertise: editForm.expertise.length > 0 ? editForm.expertise : null,
+          experiences: editForm.experiences.length > 0 ? editForm.experiences : null,
+          is_public: editForm.is_public,
+          avatar_url: avatarUrl || null,
+          social_links: Object.keys(editForm.social_links).length > 0 ? editForm.social_links : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editingInstructor.id)
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      // 成功
+      await fetchInstructors()
+      closeEditModal()
+      alert('講師資料已更新！')
+
+    } catch (err) {
+      console.error('儲存編輯錯誤:', err)
+      setEditError(err instanceof Error ? err.message : '儲存失敗')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
   // 格式化時間
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString('zh-TW', {
@@ -620,13 +803,21 @@ export default function AdminPage() {
                           </span>
                         )}
 
+                        <button
+                          onClick={() => openEditModal(instructor)}
+                          className="btn-editorial-outline text-sm py-2 px-3"
+                          title="編輯講師資料"
+                        >
+                          <Edit className="w-4 h-4" strokeWidth={1.5} />
+                          <span className="hidden sm:inline">編輯</span>
+                        </button>
                         {instructor.role !== 'admin' && (
                           <button
                             onClick={() => setSelectedInstructor(instructor)}
                             className="btn-editorial-outline text-sm py-2 px-3"
                           >
                             <FileText className="w-4 h-4" strokeWidth={1.5} />
-                            <span className="hidden sm:inline">查看詳情</span>
+                            <span className="hidden sm:inline">審核</span>
                           </button>
                         )}
                       </div>
@@ -1107,6 +1298,333 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 編輯講師 Modal */}
+      {editingInstructor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-paper border-2 border-black shadow-hard max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between sticky top-0 bg-paper z-10">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-black">編輯講師資料</h3>
+                <p className="text-sm text-ink-muted">
+                  {editingInstructor.display_name || editingInstructor.full_name || '未命名講師'}
+                </p>
+              </div>
+              <button
+                onClick={closeEditModal}
+                className="p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
+              >
+                <X className="w-5 h-5" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* 頭像上傳 */}
+              <div className="space-y-4">
+                <h4 className="font-serif font-bold text-black border-b-2 border-black pb-2 flex items-center gap-2">
+                  <Users className="w-5 h-5" strokeWidth={1.5} />
+                  講師頭像
+                </h4>
+                <div className="flex items-center gap-6">
+                  <div className="relative w-24 h-24 border-2 border-black bg-paper-dark overflow-hidden">
+                    {avatarPreview ? (
+                      <img
+                        src={avatarPreview}
+                        alt="講師頭像"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-ink-muted">
+                        <Users className="w-8 h-8" strokeWidth={1} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleAvatarChange}
+                      className="block w-full text-sm text-ink-muted
+                        file:mr-4 file:py-2 file:px-4
+                        file:border-2 file:border-black file:bg-paper
+                        file:text-sm file:font-medium file:text-black
+                        hover:file:bg-black hover:file:text-paper
+                        file:transition-colors file:cursor-pointer"
+                    />
+                    <p className="text-xs text-ink-muted mt-2">
+                      建議尺寸：400×400 像素，正方形比例最佳
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 基本資訊 */}
+              <div className="space-y-4">
+                <h4 className="font-serif font-bold text-black border-b-2 border-black pb-2 flex items-center gap-2">
+                  <FileText className="w-5 h-5" strokeWidth={1.5} />
+                  基本資訊
+                </h4>
+                
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                      顯示名稱
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.display_name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, display_name: e.target.value }))}
+                      className="input-editorial"
+                      placeholder="對外顯示的名稱"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                      姓名
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.full_name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, full_name: e.target.value }))}
+                      className="input-editorial"
+                      placeholder="真實姓名"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                      職稱/頭銜
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.title}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                      className="input-editorial"
+                      placeholder="例：資深教育顧問"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                      電話
+                    </label>
+                    <input
+                      type="tel"
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                      className="input-editorial"
+                      placeholder="0912-345-678"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                    簡短介紹
+                  </label>
+                  <textarea
+                    value={editForm.bio}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                    className="input-editorial resize-none"
+                    rows={3}
+                    placeholder="50-100 字的簡短介紹"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                    詳細介紹
+                  </label>
+                  <textarea
+                    value={editForm.bio_long}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, bio_long: e.target.value }))}
+                    className="input-editorial resize-none"
+                    rows={6}
+                    placeholder="完整的個人介紹與背景說明"
+                  />
+                </div>
+              </div>
+
+              {/* 專長領域 */}
+              <div className="space-y-4">
+                <h4 className="font-serif font-bold text-black border-b-2 border-black pb-2 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" strokeWidth={1.5} />
+                  專長領域
+                </h4>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={editExpertise}
+                    onChange={(e) => setEditExpertise(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addEditExpertise()
+                      }
+                    }}
+                    className="input-editorial flex-1"
+                    placeholder="輸入專長後按 Enter 新增"
+                  />
+                  <button
+                    type="button"
+                    onClick={addEditExpertise}
+                    className="btn-editorial-outline px-3"
+                  >
+                    <Plus className="w-4 h-4" strokeWidth={1.5} />
+                  </button>
+                </div>
+                {editForm.expertise.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {editForm.expertise.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-black text-paper text-sm border-2 border-black"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => removeEditExpertise(skill)}
+                          className="hover:text-red-300"
+                        >
+                          <X className="w-3 h-3" strokeWidth={2} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 經歷 */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b-2 border-black pb-2">
+                  <h4 className="font-serif font-bold text-black flex items-center gap-2">
+                    <Briefcase className="w-5 h-5" strokeWidth={1.5} />
+                    經歷
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={addExperience}
+                    className="btn-editorial-outline text-sm py-1 px-2"
+                  >
+                    <Plus className="w-4 h-4" strokeWidth={1.5} />
+                    <span>新增經歷</span>
+                  </button>
+                </div>
+                
+                {editForm.experiences.length === 0 ? (
+                  <p className="text-ink-muted text-sm py-4 text-center">
+                    尚未新增任何經歷
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {editForm.experiences.map((exp, index) => (
+                      <div key={index} className="p-4 border-2 border-black/30 space-y-3 relative">
+                        <button
+                          type="button"
+                          onClick={() => removeExperience(index)}
+                          className="absolute top-2 right-2 p-1 text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                        </button>
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          <input
+                            type="text"
+                            value={exp.title}
+                            onChange={(e) => updateExperience(index, 'title', e.target.value)}
+                            className="input-editorial text-sm"
+                            placeholder="職稱"
+                          />
+                          <input
+                            type="text"
+                            value={exp.organization}
+                            onChange={(e) => updateExperience(index, 'organization', e.target.value)}
+                            className="input-editorial text-sm"
+                            placeholder="組織/公司"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={exp.date}
+                          onChange={(e) => updateExperience(index, 'date', e.target.value)}
+                          className="input-editorial text-sm"
+                          placeholder="時間（例：2020 - 2024）"
+                        />
+                        <textarea
+                          value={exp.description || ''}
+                          onChange={(e) => updateExperience(index, 'description', e.target.value)}
+                          className="input-editorial text-sm resize-none"
+                          rows={2}
+                          placeholder="工作描述（選填）"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 公開設定 */}
+              <div className="space-y-4">
+                <h4 className="font-serif font-bold text-black border-b-2 border-black pb-2 flex items-center gap-2">
+                  <Eye className="w-5 h-5" strokeWidth={1.5} />
+                  公開設定
+                </h4>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editForm.is_public}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, is_public: e.target.checked }))}
+                    className="w-5 h-5 border-2 border-black"
+                  />
+                  <span className="text-black">
+                    公開顯示於講師列表
+                  </span>
+                </label>
+                <p className="text-xs text-ink-muted">
+                  開啟後，此講師將顯示在公開的講師列表頁面中
+                </p>
+              </div>
+
+              {/* 錯誤訊息 */}
+              {editError && (
+                <div className="p-4 border-2 border-red-600 bg-red-50 text-red-800">
+                  {editError}
+                </div>
+              )}
+            </div>
+
+            {/* 底部按鈕 */}
+            <div className="px-6 py-4 border-t-2 border-black bg-paper-dark flex items-center justify-between sticky bottom-0">
+              <a
+                href={`/lecturer/${editingInstructor.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-editorial-outline text-sm"
+              >
+                <Eye className="w-4 h-4" strokeWidth={1.5} />
+                <span>預覽頁面</span>
+              </a>
+              <div className="flex items-center gap-3">
+                <button onClick={closeEditModal} className="btn-editorial-outline">
+                  <span>取消</span>
+                </button>
+                <button
+                  onClick={saveInstructorEdit}
+                  disabled={savingEdit}
+                  className="btn-editorial"
+                >
+                  {savingEdit ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={1.5} />
+                  ) : (
+                    <CheckCircle className="w-4 h-4" strokeWidth={1.5} />
+                  )}
+                  <span>{savingEdit ? '儲存中...' : '儲存變更'}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
