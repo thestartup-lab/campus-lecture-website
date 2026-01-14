@@ -42,41 +42,7 @@ async function getLecturers(): Promise<Lecturer[]> {
 
   if (error) {
     console.error('獲取講師列表錯誤:', error)
-    return [
-      {
-        id: 'mock-1',
-        full_name: '王小明',
-        display_name: '王小明老師',
-        title: '資深教育顧問',
-        bio: '致力於推動創新教育，擁有超過15年的教學經驗。',
-        avatar_url: null,
-        expertise: ['創新教育', '設計思考', '領導力'],
-        is_approved: true,
-        is_public: true
-      },
-      {
-        id: 'mock-2',
-        full_name: '李小華',
-        display_name: '李小華博士',
-        title: 'AI 教育專家',
-        bio: '專注於人工智慧與教育的結合。',
-        avatar_url: null,
-        expertise: ['人工智慧', '科技教育', '數位轉型'],
-        is_approved: true,
-        is_public: true
-      },
-      {
-        id: 'mock-3',
-        full_name: '陳大偉',
-        display_name: '陳大偉教授',
-        title: '永續發展專家',
-        bio: '長期投入環境教育與永續發展議題。',
-        avatar_url: null,
-        expertise: ['永續發展', '環境教育', 'ESG'],
-        is_approved: true,
-        is_public: true
-      }
-    ]
+    return []
   }
 
   return data as Lecturer[]
