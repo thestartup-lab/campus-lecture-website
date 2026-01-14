@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, full_name, phone, title, bio, expertise, approved_by } = body
+    const { email, password, full_name, instructor_code, phone, title, bio, expertise, approved_by } = body
 
     // 驗證必填欄位
     if (!email || !password || !full_name) {
@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .update({
+        instructor_code: instructor_code || null,
         full_name,
         display_name: full_name,
         phone: phone || null,

@@ -36,6 +36,7 @@ interface Experience {
 
 interface Instructor {
   id: string
+  instructor_code: string | null  // 講師編號
   full_name: string | null
   display_name: string | null
   email: string
@@ -69,6 +70,7 @@ export default function AdminPage() {
   const [addingInstructor, setAddingInstructor] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
   const [newInstructor, setNewInstructor] = useState({
+    instructor_code: '',  // 講師編號
     full_name: '',
     email: '',
     password: '',
@@ -84,6 +86,7 @@ export default function AdminPage() {
   const [savingEdit, setSavingEdit] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({
+    instructor_code: '',  // 講師編號
     display_name: '',
     full_name: '',
     title: '',
@@ -258,6 +261,7 @@ export default function AdminPage() {
           email: newInstructor.email,
           password: newInstructor.password,
           full_name: newInstructor.full_name,
+          instructor_code: newInstructor.instructor_code,
           phone: newInstructor.phone,
           title: newInstructor.title,
           bio: newInstructor.bio,
@@ -281,6 +285,7 @@ export default function AdminPage() {
       // 成功
       setShowAddModal(false)
       setNewInstructor({
+        instructor_code: '',
         full_name: '',
         email: '',
         password: '',
@@ -323,6 +328,7 @@ export default function AdminPage() {
   const openEditModal = (instructor: Instructor) => {
     setEditingInstructor(instructor)
     setEditForm({
+      instructor_code: instructor.instructor_code || '',
       display_name: instructor.display_name || '',
       full_name: instructor.full_name || '',
       title: instructor.title || '',
@@ -438,6 +444,7 @@ export default function AdminPage() {
       const { error } = await supabase
         .from('profiles')
         .update({
+          instructor_code: editForm.instructor_code || null,
           display_name: editForm.display_name || null,
           full_name: editForm.full_name || null,
           title: editForm.title || null,
@@ -649,9 +656,16 @@ export default function AdminPage() {
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-serif font-bold text-black text-lg truncate">
-                            {instructor.full_name || instructor.display_name || '未命名'}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            {instructor.instructor_code && (
+                              <span className="px-2 py-0.5 text-xs font-mono bg-black text-paper">
+                                {instructor.instructor_code}
+                              </span>
+                            )}
+                            <p className="font-serif font-bold text-black text-lg truncate">
+                              {instructor.full_name || instructor.display_name || '未命名'}
+                            </p>
+                          </div>
                           <p className="text-sm text-ink-muted truncate">
                             {instructor.title || (instructor.role === 'admin' ? '系統管理員' : '講師申請者')}
                           </p>
@@ -889,6 +903,19 @@ export default function AdminPage() {
                   帳號資訊
                 </h4>
                 
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-black mb-2">
+                    <span>講師編號</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newInstructor.instructor_code}
+                    onChange={(e) => setNewInstructor(prev => ({ ...prev, instructor_code: e.target.value }))}
+                    className="input-editorial"
+                    placeholder="例如：001、A001"
+                  />
+                </div>
+
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-black mb-2">
                     <span>姓名</span>
@@ -1136,6 +1163,19 @@ export default function AdminPage() {
                   <FileText className="w-5 h-5" strokeWidth={1.5} />
                   基本資訊
                 </h4>
+
+                <div>
+                  <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                    講師編號
+                  </label>
+                  <input
+                    type="text"
+                    value={editForm.instructor_code}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, instructor_code: e.target.value }))}
+                    className="input-editorial max-w-xs"
+                    placeholder="例如：001、A001"
+                  />
+                </div>
                 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
