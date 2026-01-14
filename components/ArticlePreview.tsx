@@ -64,7 +64,10 @@ export default function ArticlePreview() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const response = await fetch('/api/posts?featured=true&limit=3')
+        // 加入時間戳避免快取
+        const response = await fetch(`/api/posts?featured=true&limit=3&_t=${Date.now()}`, {
+          cache: 'no-store'
+        })
         const result = await response.json()
         
         if (result.success && result.data && result.data.length > 0) {
