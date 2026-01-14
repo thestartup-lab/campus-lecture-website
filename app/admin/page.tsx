@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabase'
 import { 
   Users, 
   CheckCircle, 
-  XCircle, 
   Clock,
   Shield,
   Mail,
@@ -25,8 +24,7 @@ import {
   Plus,
   Trash2,
   Edit,
-  Eye,
-  EyeOff
+  Eye
 } from 'lucide-react'
 
 interface Experience {
@@ -56,35 +54,14 @@ interface Instructor {
   approved_at: string | null
 }
 
-interface Article {
-  id: string
-  title: string
-  excerpt: string | null
-  content: string
-  category: string | null
-  image_url: string | null
-  status: string
-  author_id: string
-  author_name?: string
-  created_at: string
-  updated_at: string
-}
-
 export default function AdminPage() {
   const { user, profile, loading, isAdmin } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'instructors' | 'articles'>('instructors')
   const [instructors, setInstructors] = useState<Instructor[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null)
-  
-  // 文章管理
-  const [articles, setArticles] = useState<Article[]>([])
-  const [loadingArticles, setLoadingArticles] = useState(true)
-  const [articleError, setArticleError] = useState<string | null>(null)
-  const [deletingArticleId, setDeletingArticleId] = useState<string | null>(null)
   
   // 新增講師 Modal
   const [showAddModal, setShowAddModal] = useState(false)
@@ -162,97 +139,8 @@ export default function AdminPage() {
   useEffect(() => {
     if (user && isAdmin) {
       fetchInstructors()
-      fetchArticles()
     }
   }, [user, isAdmin])
-
-  // 獲取所有文章
-  const fetchArticles = async () => {
-    setLoadingArticles(true)
-    setArticleError(null)
-
-    // 獲取文章
-    const { data: posts, error: postsError } = await supabase
-      .from('posts')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (postsError) {
-      console.error('獲取文章錯誤:', postsError)
-      setArticleError(postsError.message)
-      setLoadingArticles(false)
-      return
-    }
-
-    // 獲取所有講師資料以對應作者名稱
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, full_name, display_name')
-
-    const profileMap = new Map(
-      profiles?.map(p => [p.id, p.full_name || p.display_name || '未知作者']) || []
-    )
-
-    const articlesWithAuthor = posts.map(post => ({
-      ...post,
-      author_name: profileMap.get(post.author_id) || '未知作者'
-    }))
-
-    setArticles(articlesWithAuthor as Article[])
-    setLoadingArticles(false)
-  }
-
-  // 刪除文章
-  const deleteArticle = async (articleId: string, articleTitle: string) => {
-    if (!confirm(`確定要刪除文章「${articleTitle}」嗎？此操作無法復原。`)) {
-      return
-    }
-
-    setDeletingArticleId(articleId)
-
-    try {
-      const response = await fetch(`/api/supabase-posts/${articleId}`, {
-        method: 'DELETE',
-      })
-      const result = await response.json()
-
-      if (!result.success) {
-        console.error('刪除文章錯誤:', result.error)
-        alert(`刪除失敗：${result.error}`)
-      } else {
-        await fetchArticles()
-      }
-    } catch (error) {
-      console.error('刪除文章錯誤:', error)
-      alert('刪除時發生錯誤')
-    }
-
-    setDeletingArticleId(null)
-  }
-
-  // 切換文章狀態
-  const toggleArticleStatus = async (articleId: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'published' ? 'draft' : 'published'
-    
-    try {
-      const response = await fetch(`/api/supabase-posts/${articleId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      })
-      const result = await response.json()
-
-      if (!result.success) {
-        console.error('更新狀態錯誤:', result.error)
-        alert(`更新失敗：${result.error}`)
-      } else {
-        await fetchArticles()
-      }
-    } catch (error) {
-      console.error('更新狀態錯誤:', error)
-      alert('更新時發生錯誤')
-    }
-  }
 
   // 審核通過
   const approveInstructor = async (instructorId: string) => {
@@ -584,9 +472,6 @@ export default function AdminPage() {
     pending: instructors.filter(i => !i.is_approved && i.role !== 'admin').length,
     approved: instructors.filter(i => i.is_approved).length,
     admins: instructors.filter(i => i.role === 'admin').length,
-    totalArticles: articles.length,
-    publishedArticles: articles.filter(a => a.status === 'published').length,
-    draftArticles: articles.filter(a => a.status === 'draft').length,
   }
 
   // 載入中
@@ -693,7 +578,7 @@ export default function AdminPage() {
         </div>
 
         {/* Pending Approvals Alert */}
-        {stats.pending > 0 && activeTab === 'instructors' && (
+        {stats.pending > 0 && (
           <div className="mb-6 p-4 border-2 border-black bg-paper flex items-center gap-3">
             <AlertTriangle className="w-6 h-6 text-black flex-shrink-0" strokeWidth={1.5} />
             <div>
@@ -707,46 +592,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex border-b-2 border-black mb-6">
-          <button
-            onClick={() => setActiveTab('instructors')}
-            className={`flex-1 sm:flex-none px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-              activeTab === 'instructors'
-                ? 'bg-black text-paper'
-                : 'bg-paper text-black hover:bg-black/5'
-            }`}
-          >
-            <Users className="w-4 h-4" strokeWidth={1.5} />
-            講師管理
-            {stats.pending > 0 && (
-              <span className={`px-2 py-0.5 text-xs ${
-                activeTab === 'instructors' ? 'bg-paper text-black' : 'bg-yellow-500 text-white'
-              }`}>
-                {stats.pending}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('articles')}
-            className={`flex-1 sm:flex-none px-6 py-4 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-              activeTab === 'articles'
-                ? 'bg-black text-paper'
-                : 'bg-paper text-black hover:bg-black/5'
-            }`}
-          >
-            <BookOpen className="w-4 h-4" strokeWidth={1.5} />
-            文章管理
-            <span className={`px-2 py-0.5 text-xs ${
-              activeTab === 'articles' ? 'bg-paper text-black' : 'bg-black text-paper'
-            }`}>
-              {stats.totalArticles}
-            </span>
-          </button>
-        </div>
-
         {/* Instructors Table */}
-        {activeTab === 'instructors' && (
         <div className="card-editorial overflow-hidden">
           <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between">
             <div>
@@ -854,124 +700,6 @@ export default function AdminPage() {
             </div>
           )}
         </div>
-        )}
-
-        {/* Articles Table */}
-        {activeTab === 'articles' && (
-        <div className="card-editorial overflow-hidden">
-          <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between">
-            <div>
-              <h2 className="font-serif text-lg font-bold text-black">文章管理</h2>
-              <p className="text-sm text-ink-muted">
-                管理所有講師發布的文章（已發布：{stats.publishedArticles}，草稿：{stats.draftArticles}）
-              </p>
-            </div>
-            <button
-              onClick={fetchArticles}
-              disabled={loadingArticles}
-              className="p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
-              title="重新整理"
-            >
-              <RefreshCw className={`w-5 h-5 ${loadingArticles ? 'animate-spin' : ''}`} strokeWidth={1.5} />
-            </button>
-          </div>
-
-          {articleError && (
-            <div className="p-4 bg-red-50 border-b-2 border-black text-red-800">
-              載入失敗：{articleError}
-            </div>
-          )}
-
-          {loadingArticles ? (
-            <div className="p-12 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-black border-t-transparent mx-auto mb-4"></div>
-              <p className="text-ink-muted text-sm uppercase tracking-wider">載入文章資料中...</p>
-            </div>
-          ) : articles.length === 0 ? (
-            <div className="p-12 text-center">
-              <BookOpen className="w-12 h-12 text-ink-muted mx-auto mb-4" strokeWidth={1} />
-              <p className="text-ink-muted">目前沒有任何文章</p>
-            </div>
-          ) : (
-            <div className="divide-y-2 divide-black/10">
-              {articles.map((article) => (
-                <div key={article.id} className="px-6 py-4 hover:bg-paper-dark transition-colors">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-serif font-bold text-black text-lg truncate">
-                          {article.title}
-                        </h3>
-                        {article.status === 'published' ? (
-                          <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-black text-paper border border-black">
-                            <Eye className="w-3 h-3" strokeWidth={1.5} />
-                            已發布
-                          </span>
-                        ) : (
-                          <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-paper text-ink-muted border border-black/30">
-                            <EyeOff className="w-3 h-3" strokeWidth={1.5} />
-                            草稿
-                          </span>
-                        )}
-                      </div>
-                      
-                      <p className="text-sm text-ink-muted line-clamp-2 mb-2">
-                        {article.excerpt || article.content.replace(/<[^>]*>/g, '').substring(0, 150)}...
-                      </p>
-
-                      <div className="flex flex-wrap gap-4 text-xs text-ink-muted">
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3 h-3" strokeWidth={1.5} />
-                          {article.author_name}
-                        </span>
-                        {article.category && (
-                          <span className="px-2 py-0.5 bg-black/5 border border-black/20">
-                            {article.category}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" strokeWidth={1.5} />
-                          {formatDateTime(article.created_at)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => toggleArticleStatus(article.id, article.status)}
-                        className={`p-2 border-2 transition-colors ${
-                          article.status === 'published'
-                            ? 'border-black hover:bg-black hover:text-paper'
-                            : 'border-black/30 hover:border-black hover:bg-black hover:text-paper'
-                        }`}
-                        title={article.status === 'published' ? '設為草稿' : '發布文章'}
-                      >
-                        {article.status === 'published' ? (
-                          <EyeOff className="w-4 h-4" strokeWidth={1.5} />
-                        ) : (
-                          <Eye className="w-4 h-4" strokeWidth={1.5} />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => deleteArticle(article.id, article.title)}
-                        disabled={deletingArticleId === article.id}
-                        className="p-2 border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50"
-                        title="刪除文章"
-                      >
-                        {deletingArticleId === article.id ? (
-                          <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={1.5} />
-                        ) : (
-                          <Trash2 className="w-4 h-4" strokeWidth={1.5} />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        )}
       </div>
 
       {/* 詳情 Modal */}

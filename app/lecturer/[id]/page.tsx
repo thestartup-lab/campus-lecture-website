@@ -5,7 +5,6 @@ import {
   Calendar, 
   ArrowRight,
   Briefcase,
-  BookOpen,
   Quote
 } from 'lucide-react'
 import LecturerInquiryForm from '@/components/LecturerInquiryForm'
@@ -71,15 +70,6 @@ interface Lecturer {
   is_public: boolean
 }
 
-interface Article {
-  id: string
-  title: string
-  excerpt: string
-  category: string
-  created_at: string
-  image_url: string | null
-}
-
 async function getLecturer(id: string): Promise<Lecturer | null> {
   const { data, error } = await supabase
     .from('profiles')
@@ -93,22 +83,6 @@ async function getLecturer(id: string): Promise<Lecturer | null> {
   }
 
   return data as Lecturer
-}
-
-async function getLecturerArticles(authorId: string): Promise<Article[]> {
-  const { data, error } = await supabase
-    .from('posts')
-    .select('id, title, excerpt, category, created_at, image_url')
-    .eq('author_id', authorId)
-    .eq('status', 'published')
-    .order('created_at', { ascending: false })
-    .limit(6)
-
-  if (error) {
-    return []
-  }
-
-  return data as Article[]
 }
 
 // Mock 資料
@@ -148,35 +122,14 @@ const mockLecturer: Lecturer = {
   is_public: true
 }
 
-const mockArticles: Article[] = [
-  {
-    id: '1',
-    title: '如何在校園中推動創新教育',
-    excerpt: '探討在現代教育環境中，如何透過創新的教學方法激發學生的學習興趣...',
-    category: '教育創新',
-    created_at: '2024-01-15T10:00:00Z',
-    image_url: null
-  },
-  {
-    id: '2',
-    title: '設計思考在教育中的應用',
-    excerpt: '設計思考不只是設計師的專利，它更是一種解決問題的思維方式...',
-    category: '設計思考',
-    created_at: '2024-01-10T10:00:00Z',
-    image_url: null
-  },
-]
-
 export default async function LecturerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   
   let lecturer = await getLecturer(id)
-  let articles = await getLecturerArticles(id)
 
   const useMock = !lecturer
   if (useMock) {
     lecturer = mockLecturer
-    articles = mockArticles
   }
 
   if (!lecturer) {
@@ -300,48 +253,6 @@ export default async function LecturerPage({ params }: { params: Promise<{ id: s
                     {exp.date}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Articles */}
-      {articles.length > 0 && (
-        <section className="py-24 border-b-2 border-black">
-          <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
-            <div className="flex items-center justify-between mb-12">
-              <div className="flex items-center gap-3">
-                <BookOpen className="w-6 h-6" strokeWidth={1.5} />
-                <h2 className="font-serif text-3xl font-bold">專欄文章</h2>
-              </div>
-              <Link href="/blog" className="btn-editorial-outline text-sm">
-                <span>查看全部</span>
-                <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
-              </Link>
-            </div>
-            <div className="grid md:grid-cols-2 gap-8">
-              {articles.map((article) => (
-                <Link
-                  key={article.id}
-                  href={`/blog/${article.id}`}
-                  className="card-editorial group"
-                >
-                  <div className="p-6">
-                    <span className="tag-editorial mb-4 inline-block">
-                      {article.category}
-                    </span>
-                    <h3 className="font-serif text-xl font-bold mb-3 group-hover:underline underline-offset-4 decoration-2">
-                      {article.title}
-                    </h3>
-                    <p className="text-ink-muted text-sm line-clamp-2 mb-4">
-                      {article.excerpt}
-                    </p>
-                    <p className="text-xs uppercase tracking-wider text-ink-muted">
-                      {formatDate(article.created_at)}
-                    </p>
-                  </div>
-                </Link>
               ))}
             </div>
           </div>
