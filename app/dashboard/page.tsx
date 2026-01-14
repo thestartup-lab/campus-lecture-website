@@ -165,6 +165,7 @@ export default function DashboardPage() {
   const [loadingLectureRequests, setLoadingLectureRequests] = useState(true)
   const [lectureRequestError, setLectureRequestError] = useState<string | null>(null)
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
+  const [deletingLectureRequestId, setDeletingLectureRequestId] = useState<string | null>(null)
 
   // Lecture Plans state
   const [lecturePlans, setLecturePlans] = useState<LecturePlan[]>([])
@@ -554,6 +555,34 @@ export default function DashboardPage() {
     }
 
     setUpdatingStatusId(null)
+  }
+
+  // 刪除講座邀約
+  const deleteLectureRequest = async (pageId: string, schoolName: string) => {
+    if (!confirm(`確定要刪除來自「${schoolName}」的講座邀約嗎？此操作無法復原。`)) {
+      return
+    }
+
+    setDeletingLectureRequestId(pageId)
+
+    try {
+      const response = await fetch(`/api/lecture-applications?pageId=${pageId}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
+
+      if (result.success) {
+        await fetchLectureRequests()
+      } else {
+        console.error('刪除講座邀約錯誤:', result.error)
+        alert(`刪除失敗：${result.error}`)
+      }
+    } catch (error) {
+      console.error('刪除講座邀約錯誤:', error)
+      alert('刪除時發生錯誤')
+    }
+
+    setDeletingLectureRequestId(null)
   }
 
   // 切換回饋顯示狀態 (Notion)
@@ -2231,17 +2260,31 @@ export default function DashboardPage() {
                             ))}
                           </div>
 
-                          {/* Notion 連結 */}
-                          {request.url && (
-                            <a
-                              href={request.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-ink-muted hover:text-black underline text-center lg:text-right"
+                          {/* Notion 連結與刪除 */}
+                          <div className="flex items-center gap-3">
+                            {request.url && (
+                              <a
+                                href={request.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-ink-muted hover:text-black underline"
+                              >
+                                在 Notion 中開啟 →
+                              </a>
+                            )}
+                            <button
+                              onClick={() => deleteLectureRequest(request.id, request.schoolName)}
+                              disabled={deletingLectureRequestId === request.id}
+                              className="p-1.5 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50"
+                              title="刪除此邀約"
                             >
-                              在 Notion 中開啟 →
-                            </a>
-                          )}
+                              {deletingLectureRequestId === request.id ? (
+                                <RefreshCw className="w-3 h-3 animate-spin" strokeWidth={1.5} />
+                              ) : (
+                                <Trash2 className="w-3 h-3" strokeWidth={1.5} />
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

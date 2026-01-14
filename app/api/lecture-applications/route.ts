@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createLectureApplication, getLectureApplications, updateApplicationStatus, type LectureApplication } from '@/lib/notion'
+import { createLectureApplication, getLectureApplications, updateApplicationStatus, deleteLectureApplication, type LectureApplication } from '@/lib/notion'
 import { supabase } from '@/lib/supabase'
 
 // ========================================
@@ -276,6 +276,43 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json(
       {
         error: '更新狀態時發生錯誤',
+        details: error instanceof Error ? error.message : '未知錯誤',
+      },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * DELETE - 刪除講座申請
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const pageId = searchParams.get('pageId')
+
+    if (!pageId) {
+      return NextResponse.json(
+        { error: '缺少 pageId 參數' },
+        { status: 400 }
+      )
+    }
+
+    const result = await deleteLectureApplication(pageId)
+
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        message: '講座申請已刪除',
+      })
+    } else {
+      throw new Error(result.error)
+    }
+  } catch (error) {
+    console.error('刪除講座申請 API 錯誤:', error)
+    return NextResponse.json(
+      {
+        error: '刪除申請時發生錯誤',
         details: error instanceof Error ? error.message : '未知錯誤',
       },
       { status: 500 }

@@ -310,6 +310,27 @@ export async function updateApplicationStatus(
 }
 
 /**
+ * 刪除講座申請單（移到垃圾桶）
+ */
+export async function deleteLectureApplication(
+  pageId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await notion.pages.update({
+      page_id: pageId,
+      archived: true,
+    })
+    return { success: true }
+  } catch (error) {
+    console.error('刪除 Notion 申請單失敗:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '未知錯誤',
+    }
+  }
+}
+
+/**
  * 測試 Notion 連線
  */
 export async function testNotionConnection(): Promise<{
