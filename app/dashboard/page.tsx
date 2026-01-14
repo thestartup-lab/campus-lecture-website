@@ -147,6 +147,7 @@ export default function DashboardPage() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
   const [loadingSubscribers, setLoadingSubscribers] = useState(true)
   const [subError, setSubError] = useState<string | null>(null)
+  const [deletingSubscriberId, setDeletingSubscriberId] = useState<string | null>(null)
 
   // Articles state
   const [articles, setArticles] = useState<Article[]>([])
@@ -288,6 +289,34 @@ export default function DashboardPage() {
       // 忽略錯誤
     }
     setLoadingSubscribers(false)
+  }
+
+  // 刪除訂閱者
+  const deleteSubscriber = async (id: string, email: string) => {
+    if (!confirm(`確定要刪除訂閱者「${email}」嗎？此操作無法復原。`)) {
+      return
+    }
+
+    setDeletingSubscriberId(id)
+
+    try {
+      const response = await fetch(`/api/subscribers?id=${id}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
+
+      if (result.success) {
+        await fetchSubscribers()
+      } else {
+        console.error('刪除訂閱者錯誤:', result.error)
+        alert(`刪除失敗：${result.error}`)
+      }
+    } catch (error) {
+      console.error('刪除訂閱者錯誤:', error)
+      alert('刪除時發生錯誤')
+    }
+
+    setDeletingSubscriberId(null)
   }
 
   // 獲取文章 (從 Notion)
@@ -1969,6 +1998,9 @@ export default function DashboardPage() {
                         <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
                           狀態
                         </th>
+                        <th className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider text-black">
+                          操作
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y-2 divide-black/10">
@@ -2003,6 +2035,20 @@ export default function DashboardPage() {
                                 已取消
                               </span>
                             )}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button
+                              onClick={() => deleteSubscriber(sub.id, sub.email)}
+                              disabled={deletingSubscriberId === sub.id}
+                              className="p-2 border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50"
+                              title="刪除訂閱者"
+                            >
+                              {deletingSubscriberId === sub.id ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={1.5} />
+                              ) : (
+                                <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                              )}
+                            </button>
                           </td>
                         </tr>
                       ))}
