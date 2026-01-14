@@ -37,7 +37,6 @@ async function getLecturers(): Promise<Lecturer[]> {
     .eq('is_approved', true)
     .eq('is_public', true)
     .in('role', ['instructor', 'admin'])
-    .order('instructor_code', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -45,7 +44,17 @@ async function getLecturers(): Promise<Lecturer[]> {
     return []
   }
 
-  return data as Lecturer[]
+  // 按 instructor_code 排序（有編號的在前，無編號的在後）
+  const sorted = (data || []).sort((a, b) => {
+    if (a.instructor_code && b.instructor_code) {
+      return a.instructor_code.localeCompare(b.instructor_code)
+    }
+    if (a.instructor_code && !b.instructor_code) return -1
+    if (!a.instructor_code && b.instructor_code) return 1
+    return 0
+  })
+
+  return sorted as Lecturer[]
 }
 
 export default async function LecturersPage() {
