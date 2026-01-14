@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // 更新常見問題諮詢狀態
 export async function PATCH(
@@ -26,7 +26,7 @@ export async function PATCH(
       }, { status: 400 })
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('faq_inquiries')
       .update({ status })
       .eq('id', id)
@@ -60,7 +60,7 @@ export async function DELETE(
   try {
     const { id } = await params
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('faq_inquiries')
       .delete()
       .eq('id', id)
