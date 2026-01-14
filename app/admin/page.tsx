@@ -210,16 +210,21 @@ export default function AdminPage() {
 
     setDeletingArticleId(articleId)
 
-    const { error } = await supabase
-      .from('posts')
-      .delete()
-      .eq('id', articleId)
+    try {
+      const response = await fetch(`/api/supabase-posts/${articleId}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
 
-    if (error) {
+      if (!result.success) {
+        console.error('刪除文章錯誤:', result.error)
+        alert(`刪除失敗：${result.error}`)
+      } else {
+        await fetchArticles()
+      }
+    } catch (error) {
       console.error('刪除文章錯誤:', error)
-      alert(`刪除失敗：${error.message}`)
-    } else {
-      await fetchArticles()
+      alert('刪除時發生錯誤')
     }
 
     setDeletingArticleId(null)
@@ -229,16 +234,23 @@ export default function AdminPage() {
   const toggleArticleStatus = async (articleId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'published' ? 'draft' : 'published'
     
-    const { error } = await supabase
-      .from('posts')
-      .update({ status: newStatus })
-      .eq('id', articleId)
+    try {
+      const response = await fetch(`/api/supabase-posts/${articleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      const result = await response.json()
 
-    if (error) {
+      if (!result.success) {
+        console.error('更新狀態錯誤:', result.error)
+        alert(`更新失敗：${result.error}`)
+      } else {
+        await fetchArticles()
+      }
+    } catch (error) {
       console.error('更新狀態錯誤:', error)
-      alert(`更新失敗：${error.message}`)
-    } else {
-      await fetchArticles()
+      alert('更新時發生錯誤')
     }
   }
 
