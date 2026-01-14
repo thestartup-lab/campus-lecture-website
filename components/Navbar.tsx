@@ -55,7 +55,7 @@ export default function Navbar() {
             
             {/* 登入狀態 */}
             {loading ? (
-              <div className="w-24 h-10 border-2 border-black/20 animate-pulse" />
+              <div className="w-20 h-8 bg-black/5 animate-pulse" />
             ) : user ? (
               <div className="flex items-center gap-3">
                 {/* 用戶名稱 */}

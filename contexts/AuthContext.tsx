@@ -89,6 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     getSession()
 
+    // 超時機制：確保 loading 最終會結束
+    const timeout = setTimeout(() => {
+      setLoading(false)
+    }, 3000)
+
     // 監聽 auth 狀態變化
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -108,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       subscription.unsubscribe()
+      clearTimeout(timeout)
     }
   }, [])
 
