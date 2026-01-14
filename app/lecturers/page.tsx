@@ -36,6 +36,7 @@ async function getLecturers(): Promise<Lecturer[]> {
     .eq('is_approved', true)
     .eq('is_public', true)
     .in('role', ['instructor', 'admin'])
+    .order('instructor_code', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
 
   if (error) {
