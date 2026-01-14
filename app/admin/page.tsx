@@ -248,55 +248,34 @@ export default function AdminPage() {
     }
 
     try {
-      // 1. 註冊用戶
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: newInstructor.email,
-        password: newInstructor.password,
-        options: {
-          data: {
-            full_name: newInstructor.full_name,
-          }
-        }
+      // 使用 Admin API 創建講師帳號（不需要 email 驗證）
+      const response = await fetch('/api/instructors/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: newInstructor.email,
+          password: newInstructor.password,
+          full_name: newInstructor.full_name,
+          phone: newInstructor.phone,
+          title: newInstructor.title,
+          bio: newInstructor.bio,
+          expertise: newInstructor.expertise,
+          approved_by: user?.id,
+        }),
       })
 
-      if (authError) {
-        if (authError.message.includes('already registered')) {
-          setAddError('此電子郵件已被註冊')
-        } else {
-          setAddError(authError.message)
-        }
+      const result = await response.json()
+
+      if (!result.success) {
+        setAddError(result.error || '新增失敗')
         setAddingInstructor(false)
         return
       }
 
-      if (!authData.user) {
-        setAddError('建立帳號失敗，請稍後再試')
-        setAddingInstructor(false)
-        return
-      }
-
-      // 2. 更新 profile 資料（直接設為已審核）
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: newInstructor.full_name,
-          display_name: newInstructor.full_name,
-          phone: newInstructor.phone || null,
-          title: newInstructor.title || null,
-          bio: newInstructor.bio || null,
-          expertise: newInstructor.expertise.length > 0 ? newInstructor.expertise : null,
-          role: 'instructor',
-          is_approved: true, // 直接審核通過
-          is_public: true,   // 直接公開
-          approved_at: new Date().toISOString(),
-          approved_by: user?.id,
-        })
-        .eq('id', authData.user.id)
-
-      if (profileError) {
-        console.error('更新 profile 錯誤:', profileError)
-        // 帳號已創建，但 profile 更新失敗
-        setAddError('帳號已建立，但資料更新失敗，請手動審核')
+      if (result.warning) {
+        setAddError(result.warning)
       }
 
       // 成功
@@ -311,7 +290,7 @@ export default function AdminPage() {
         expertise: [],
       })
       await fetchInstructors()
-      alert('內部講師已成功新增並自動審核通過！')
+      alert('內部講師已成功新增！講師可以直接使用 Email 和密碼登入。')
 
     } catch (err) {
       console.error('新增講師錯誤:', err)
