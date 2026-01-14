@@ -62,6 +62,7 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null)
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null)
+  const [deletingInstructorId, setDeletingInstructorId] = useState<string | null>(null)
   
   // 新增講師 Modal
   const [showAddModal, setShowAddModal] = useState(false)
@@ -190,6 +191,41 @@ export default function AdminPage() {
     }
     
     setProcessingId(null)
+  }
+
+  // 刪除講師
+  const deleteInstructor = async (instructorId: string, instructorName: string) => {
+    if (!confirm(`確定要刪除講師「${instructorName}」嗎？\n\n此操作會完全刪除該帳號，無法復原！`)) {
+      return
+    }
+
+    // 二次確認
+    if (!confirm(`再次確認：刪除「${instructorName}」？`)) {
+      return
+    }
+
+    setDeletingInstructorId(instructorId)
+
+    try {
+      const response = await fetch(`/api/instructors?id=${instructorId}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
+
+      if (result.success) {
+        await fetchInstructors()
+        setSelectedInstructor(null)
+        alert(result.message || '講師已刪除')
+      } else {
+        console.error('刪除講師錯誤:', result.error)
+        alert(`刪除失敗：${result.error}`)
+      }
+    } catch (error) {
+      console.error('刪除講師錯誤:', error)
+      alert('刪除時發生錯誤')
+    }
+
+    setDeletingInstructorId(null)
   }
 
   // 新增內部講師
@@ -670,13 +706,27 @@ export default function AdminPage() {
                           <span className="hidden sm:inline">編輯</span>
                         </button>
                         {instructor.role !== 'admin' && (
-                          <button
-                            onClick={() => setSelectedInstructor(instructor)}
-                            className="btn-editorial-outline text-sm py-2 px-3"
-                          >
-                            <FileText className="w-4 h-4" strokeWidth={1.5} />
-                            <span className="hidden sm:inline">審核</span>
-                          </button>
+                          <>
+                            <button
+                              onClick={() => setSelectedInstructor(instructor)}
+                              className="btn-editorial-outline text-sm py-2 px-3"
+                            >
+                              <FileText className="w-4 h-4" strokeWidth={1.5} />
+                              <span className="hidden sm:inline">審核</span>
+                            </button>
+                            <button
+                              onClick={() => deleteInstructor(instructor.id, instructor.full_name || instructor.display_name || '未命名')}
+                              disabled={deletingInstructorId === instructor.id}
+                              className="p-2 border-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50"
+                              title="刪除講師"
+                            >
+                              {deletingInstructorId === instructor.id ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={1.5} />
+                              ) : (
+                                <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                              )}
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
