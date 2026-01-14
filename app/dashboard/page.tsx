@@ -855,7 +855,7 @@ export default function DashboardPage() {
         }
       }
 
-      // 更新 profile - 使用 upsert 以確保資料存在
+      // 更新 profile - 使用 API 路由（繞過 RLS）
       const updateData: Record<string, unknown> = {
         id: user.id,
         display_name: profileForm.display_name || null,
@@ -871,22 +871,19 @@ export default function DashboardPage() {
 
       console.log('準備儲存的資料:', JSON.stringify(updateData, null, 2))
 
-      // 直接執行，不使用重試（簡化流程）
-      const { error, data } = await supabase
-        .from('profiles')
-        .upsert(updateData, { onConflict: 'id' })
-        .select()
+      // 使用 API 路由更新（繞過 RLS 限制）
+      const response = await fetch('/api/profiles', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData),
+      })
+      const result = await response.json()
       
-      console.log('Supabase 回應:', { error, data })
+      console.log('API 回應:', result)
 
-      if (error) {
-        console.error('Supabase 錯誤詳情:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-        })
-        alert('儲存失敗：' + error.message)
+      if (!result.success) {
+        console.error('更新錯誤:', result.error)
+        alert('儲存失敗：' + result.error)
         setSavingProfile(false)
         return
       }
