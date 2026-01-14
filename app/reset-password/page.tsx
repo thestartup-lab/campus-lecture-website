@@ -139,7 +139,7 @@ export default function ResetPasswordPage() {
         <div className="text-center mb-12">
           <Link href="/" className="inline-flex items-center gap-3 text-black font-bold text-2xl font-serif">
             <span className="text-3xl">📰</span>
-            <span>校園講座計劃</span>
+            <span>生命應該是這樣的</span>
           </Link>
           <h2 className="mt-8 font-serif text-4xl font-bold text-black">
             重設密碼

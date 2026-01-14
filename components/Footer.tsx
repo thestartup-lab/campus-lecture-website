@@ -19,7 +19,7 @@ export default function Footer() {
       .catch(err => console.error('載入網站設定錯誤:', err))
   }, [])
 
-  const siteName = (settings.site_name as string) || '校園講座'
+  const siteName = (settings.site_name as string) || '生命應該是這樣的'
   const footerEmail = (settings.footer_email as string) || 'info@campuslecture.com'
   const footerPhone = (settings.footer_phone as string) || '(02) 1234-5678'
   const footerAddress = (settings.footer_address as string) || '台北市大安區'
@@ -46,11 +46,11 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Link href="/" className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-black text-paper flex items-center justify-center">
-                <BookOpen className="w-6 h-6" strokeWidth={1.5} />
+            <Link href="/" className="flex items-center gap-2 mb-6">
+              <div className="w-10 h-10 bg-black text-paper flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-5 h-5" strokeWidth={1.5} />
               </div>
-              <span className="font-serif text-2xl font-bold">{siteName}</span>
+              <span className="font-serif text-base sm:text-lg font-bold whitespace-nowrap">{siteName}</span>
             </Link>
             <p className="text-ink-muted text-sm leading-relaxed mb-6">
               {footerDescription}

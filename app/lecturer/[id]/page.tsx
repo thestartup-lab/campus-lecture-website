@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     .single()
 
   if (!data) {
-    return { title: '講師不存在 | 校園講座計劃' }
+    return { title: '講師不存在 | 生命應該是這樣的' }
   }
 
   const name = data.display_name || data.full_name

@@ -34,8 +34,8 @@ export default function Navbar() {
             <div className="w-10 h-10 bg-black text-paper flex items-center justify-center">
               <BookOpen className="w-5 h-5" strokeWidth={1.5} />
             </div>
-            <span className="hidden sm:block font-serif text-xl font-bold tracking-tight">
-              校園講座
+            <span className="hidden sm:block font-serif text-base font-bold tracking-tight whitespace-nowrap">
+              生命應該是這樣的
             </span>
           </Link>
 

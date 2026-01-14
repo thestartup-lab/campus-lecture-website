@@ -9,10 +9,10 @@ export const revalidate = 3600
 
 // SEO Metadata
 export const metadata: Metadata = {
-  title: '教育專欄 | 校園講座計劃',
+  title: '教育專欄 | 生命應該是這樣的',
   description: '深入的教育觀點、實務分享與創新思維，與您一起探索教育的無限可能。',
   openGraph: {
-    title: '教育專欄 | 校園講座計劃',
+    title: '教育專欄 | 生命應該是這樣的',
     description: '深入的教育觀點、實務分享與創新思維，與您一起探索教育的無限可能。',
     type: 'website',
   },

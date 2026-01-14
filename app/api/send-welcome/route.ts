@@ -26,9 +26,9 @@ export async function POST(request: NextRequest) {
 
     // 發送歡迎信
     const { data, error } = await resend.emails.send({
-      from: '校園講座計劃 <onboarding@resend.dev>', // 使用 Resend 預設寄件者，正式上線請改成您的網域
+      from: '生命應該是這樣的 <onboarding@resend.dev>', // 使用 Resend 預設寄件者，正式上線請改成您的網域
       to: email,
-      subject: '🎉 歡迎訂閱校園講座計劃電子報！',
+      subject: '🎉 歡迎訂閱生命應該是這樣的電子報！',
       html: `
         <!DOCTYPE html>
         <html>
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
                   <tr>
                     <td style="background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); padding: 40px 40px 30px; text-align: center;">
                       <h1 style="color: #ffffff; font-size: 28px; margin: 0 0 10px; font-weight: bold;">
-                        📚 校園講座計劃
+                        📚 生命應該是這樣的
                       </h1>
                       <p style="color: rgba(255, 255, 255, 0.9); font-size: 16px; margin: 0;">
                         讓教育更有溫度
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
                   <tr>
                     <td style="background-color: #f9fafb; padding: 30px 40px; border-top: 1px solid #e5e7eb;">
                       <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 0 0 10px; text-align: center;">
-                        此郵件由<strong>校園講座計劃</strong>自動發送
+                        此郵件由<strong>生命應該是這樣的</strong>自動發送
                       </p>
                       <p style="color: #9ca3af; font-size: 12px; line-height: 1.6; margin: 0; text-align: center;">
                         如果您不想再收到這類郵件，請回覆此郵件告知我們。
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
                 
                 <!-- Copyright -->
                 <p style="color: #9ca3af; font-size: 12px; margin: 20px 0 0; text-align: center;">
-                  © ${new Date().getFullYear()} 校園講座計劃. All rights reserved.
+                  © ${new Date().getFullYear()} 生命應該是這樣的. All rights reserved.
                 </p>
               </td>
             </tr>

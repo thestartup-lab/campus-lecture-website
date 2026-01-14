@@ -188,7 +188,7 @@ export default function LectureRequestPage() {
             Request a Lecture
           </span>
           <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-bold text-black mb-8">
-            申請校園講座
+            申請講座
           </h1>
           <p className="text-lg text-ink-muted max-w-2xl leading-relaxed">
             填寫以下表單，為您的學校預約一場啟發性的講座。我們將根據您的需求，媒合最適合的講師。

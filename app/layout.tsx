@@ -26,25 +26,25 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "校園講座計劃 - 讓教育更有溫度",
-    template: "%s | 校園講座計劃",
+    default: "生命應該是這樣的 - 讓教育更有溫度",
+    template: "%s | 生命應該是這樣的",
   },
   description: "連結專業講師與校園，為學生帶來啟發性的學習體驗。我們相信，每一場講座都能點燃學習的熱情，開啟未來的可能。",
-  keywords: ["校園講座", "教育", "講師", "學生", "學校", "演講", "教育講座", "校園活動"],
-  authors: [{ name: "校園講座計劃" }],
-  creator: "校園講座計劃",
+  keywords: ["生命教育", "教育", "講師", "學生", "學校", "演講", "教育講座", "校園活動"],
+  authors: [{ name: "生命應該是這樣的" }],
+  creator: "生命應該是這樣的",
   metadataBase: new URL("https://campus-lecture-website.vercel.app"),
   openGraph: {
-    title: "校園講座計劃 - 讓教育更有溫度",
+    title: "生命應該是這樣的 - 讓教育更有溫度",
     description: "連結專業講師與校園，為學生帶來啟發性的學習體驗。",
     url: "https://campus-lecture-website.vercel.app",
-    siteName: "校園講座計劃",
+    siteName: "生命應該是這樣的",
     locale: "zh_TW",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "校園講座計劃 - 讓教育更有溫度",
+    title: "生命應該是這樣的 - 讓教育更有溫度",
     description: "連結專業講師與校園，為學生帶來啟發性的學習體驗。",
   },
   robots: {
