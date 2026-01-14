@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 
 interface Lecturer {
   id: string
+  instructor_code: string | null
   full_name: string
   display_name: string | null
   title: string | null
@@ -32,7 +33,7 @@ interface Lecturer {
 async function getLecturers(): Promise<Lecturer[]> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, display_name, title, bio, avatar_url, expertise, is_approved, is_public, role')
+    .select('id, instructor_code, full_name, display_name, title, bio, avatar_url, expertise, is_approved, is_public, role')
     .eq('is_approved', true)
     .eq('is_public', true)
     .in('role', ['instructor', 'admin'])
