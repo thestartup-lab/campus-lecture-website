@@ -171,6 +171,7 @@ export default function DashboardPage() {
   const [lecturePlans, setLecturePlans] = useState<LecturePlan[]>([])
   const [loadingLecturePlans, setLoadingLecturePlans] = useState(true)
   const [lecturePlanError, setLecturePlanError] = useState<string | null>(null)
+  const [deletingLecturePlanId, setDeletingLecturePlanId] = useState<string | null>(null)
 
   // FAQ Inquiries state
   const [faqInquiries, setFaqInquiries] = useState<FAQInquiry[]>([])
@@ -420,6 +421,34 @@ export default function DashboardPage() {
       setLecturePlanError('網路錯誤，請稍後再試')
     }
     setLoadingLecturePlans(false)
+  }
+
+  // 刪除講座規劃申請
+  const deleteLecturePlan = async (id: string, email: string) => {
+    if (!confirm(`確定要刪除來自「${email}」的講座規劃申請嗎？此操作無法復原。`)) {
+      return
+    }
+
+    setDeletingLecturePlanId(id)
+
+    try {
+      const response = await fetch(`/api/lecture-plans?id=${id}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
+
+      if (result.success) {
+        await fetchLecturePlans()
+      } else {
+        console.error('刪除講座規劃申請錯誤:', result.error)
+        alert(`刪除失敗：${result.error}`)
+      }
+    } catch (error) {
+      console.error('刪除講座規劃申請錯誤:', error)
+      alert('刪除時發生錯誤')
+    }
+
+    setDeletingLecturePlanId(null)
   }
 
   // 獲取常見問題諮詢
@@ -2432,6 +2461,20 @@ export default function DashboardPage() {
                                 )
                               })}
                             </div>
+                            
+                            {/* 刪除按鈕 */}
+                            <button
+                              onClick={() => deleteLecturePlan(plan.id, plan.contact_email)}
+                              disabled={deletingLecturePlanId === plan.id}
+                              className="p-1.5 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors disabled:opacity-50"
+                              title="刪除此申請"
+                            >
+                              {deletingLecturePlanId === plan.id ? (
+                                <RefreshCw className="w-3 h-3 animate-spin" strokeWidth={1.5} />
+                              ) : (
+                                <Trash2 className="w-3 h-3" strokeWidth={1.5} />
+                              )}
+                            </button>
                           </div>
                         </div>
                       </div>

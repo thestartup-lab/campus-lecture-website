@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // 取得所有講座規劃申請
 export async function GET() {
@@ -126,6 +127,45 @@ export async function PATCH(request: Request) {
     })
   } catch (error) {
     console.error('處理講座規劃申請狀態更新錯誤:', error)
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : '未知錯誤',
+    }, { status: 500 })
+  }
+}
+
+// 刪除講座規劃申請
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({
+        success: false,
+        error: '缺少 id 參數',
+      }, { status: 400 })
+    }
+
+    const { error } = await supabaseAdmin
+      .from('lecture_plans')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('刪除講座規劃申請錯誤:', error)
+      return NextResponse.json({
+        success: false,
+        error: error.message || '刪除失敗',
+      }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: '講座規劃申請已刪除',
+    })
+  } catch (error) {
+    console.error('處理刪除講座規劃申請錯誤:', error)
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : '未知錯誤',
