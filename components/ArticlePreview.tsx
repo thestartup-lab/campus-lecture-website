@@ -70,6 +70,8 @@ export default function ArticlePreview() {
         })
         const result = await response.json()
         
+        console.log('首頁文章 API 回應:', result)
+        
         if (result.success && result.data && result.data.length > 0) {
           setArticles(result.data.map((article: {
             id: string
@@ -90,6 +92,8 @@ export default function ArticlePreview() {
             featured: article.featured,
             imageUrl: article.imageUrl,
           })))
+        } else {
+          console.error('獲取精選文章失敗或無資料:', result.error || '無資料')
         }
       } catch (error) {
         console.error('獲取精選文章失敗:', error)

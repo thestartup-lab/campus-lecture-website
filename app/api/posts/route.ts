@@ -19,9 +19,16 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit')
     const featured = searchParams.get('featured')
 
+    console.log('API /api/posts 請求:', { status, authorId, limit, featured })
+    console.log('環境變數檢查:', { 
+      hasNotionKey: !!process.env.NOTION_API_KEY,
+      hasPostsDbId: !!process.env.NOTION_POSTS_DB_ID 
+    })
+
     // 如果請求精選文章
     if (featured === 'true') {
       const result = await getFeaturedPosts(limit ? parseInt(limit) : 3)
+      console.log('getFeaturedPosts 結果:', { success: result.success, dataLength: result.data?.length, error: result.error })
       if (!result.success) {
         return NextResponse.json(
           { success: false, error: result.error },
