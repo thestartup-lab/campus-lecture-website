@@ -5,7 +5,8 @@ import { getPosts } from '@/lib/notion'
 import type { Metadata } from 'next'
 
 // ISR: 每小時重新生成一次
-export const revalidate = 3600
+// 動態渲染，確保資料即時更新
+export const dynamic = 'force-dynamic'
 
 // SEO Metadata
 export const metadata: Metadata = {

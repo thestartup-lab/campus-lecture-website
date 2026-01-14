@@ -5,7 +5,8 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
 // ISR: 每小時重新生成一次
-export const revalidate = 3600
+// 動態渲染，確保資料即時更新
+export const dynamic = 'force-dynamic'
 
 // 生成動態 metadata（含 Open Graph）
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
