@@ -320,14 +320,16 @@ export default function DashboardPage() {
   }
 
   // 獲取文章 (從 Notion)
-  // Dashboard 是講師後台，所有用戶（包括管理員）都只看到自己的文章
+  // 管理員可以看到所有文章，一般講師只看到自己的文章
   const fetchArticles = async () => {
     setLoadingArticles(true)
     setArticleError(null)
-    
+
     try {
-      // Dashboard 永遠只顯示當前用戶自己的文章
-      const apiUrl = `/api/posts?authorId=${user?.id || ''}`
+      // 管理員看所有文章，講師只看自己的
+      const apiUrl = isAdmin 
+        ? `/api/posts` 
+        : `/api/posts?authorId=${user?.id || ''}`
       
       const response = await fetch(apiUrl)
       const result = await response.json()
