@@ -327,7 +327,7 @@ export default function DashboardPage() {
 
     try {
       // 管理員看所有文章，講師只看自己的
-      const apiUrl = isAdmin 
+      const apiUrl = profile?.role === 'admin'
         ? `/api/posts` 
         : `/api/posts?authorId=${user?.id || ''}`
       
