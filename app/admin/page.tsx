@@ -110,6 +110,32 @@ export default function AdminPage() {
   const [newPassword, setNewPassword] = useState('')
   const [resettingPassword, setResettingPassword] = useState(false)
 
+  // 設定角色函數
+  const setUserRole = async (userId: string, newRole: 'admin' | 'instructor', userName: string) => {
+    const action = newRole === 'admin' ? '設為管理員' : '取消管理員'
+    if (!confirm(`確定要將「${userName}」${action}嗎？`)) return
+
+    try {
+      const response = await fetch('/api/instructors/set-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, role: newRole }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        alert(result.message)
+        fetchInstructors()
+      } else {
+        alert(`操作失敗：${result.error}`)
+      }
+    } catch (err) {
+      console.error('設定角色錯誤:', err)
+      alert('設定角色時發生錯誤')
+    }
+  }
+
   // 更新帳號密碼函數
   const updateCredentials = async () => {
     if (!resetPasswordInstructor) return
@@ -770,7 +796,7 @@ export default function AdminPage() {
                           <Key className="w-4 h-4" strokeWidth={1.5} />
                           <span className="hidden sm:inline">密碼</span>
                         </button>
-                        {instructor.role !== 'admin' && (
+                        {instructor.role !== 'admin' ? (
                           <>
                             <button
                               onClick={() => setSelectedInstructor(instructor)}
@@ -778,6 +804,14 @@ export default function AdminPage() {
                             >
                               <FileText className="w-4 h-4" strokeWidth={1.5} />
                               <span className="hidden sm:inline">審核</span>
+                            </button>
+                            <button
+                              onClick={() => setUserRole(instructor.id, 'admin', instructor.full_name || instructor.display_name || '未命名')}
+                              className="btn-editorial-outline text-sm py-2 px-3"
+                              title="設為管理員"
+                            >
+                              <Shield className="w-4 h-4" strokeWidth={1.5} />
+                              <span className="hidden sm:inline">設為管理員</span>
                             </button>
                             <button
                               onClick={() => deleteInstructor(instructor.id, instructor.full_name || instructor.display_name || '未命名')}
@@ -792,6 +826,18 @@ export default function AdminPage() {
                               )}
                             </button>
                           </>
+                        ) : (
+                          // 管理員可以被取消管理員身份（但不能取消自己）
+                          instructor.id !== user?.id && (
+                            <button
+                              onClick={() => setUserRole(instructor.id, 'instructor', instructor.full_name || instructor.display_name || '未命名')}
+                              className="btn-editorial-outline text-sm py-2 px-3 text-yellow-700 border-yellow-600 hover:bg-yellow-600 hover:text-white"
+                              title="取消管理員"
+                            >
+                              <UserX className="w-4 h-4" strokeWidth={1.5} />
+                              <span className="hidden sm:inline">取消管理員</span>
+                            </button>
+                          )
                         )}
                       </div>
                     </div>
