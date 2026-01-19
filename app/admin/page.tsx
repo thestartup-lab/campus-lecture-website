@@ -104,17 +104,28 @@ export default function AdminPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
 
-  // 重設密碼 Modal
+  // 帳號密碼管理 Modal
   const [resetPasswordInstructor, setResetPasswordInstructor] = useState<Instructor | null>(null)
+  const [newEmail, setNewEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [resettingPassword, setResettingPassword] = useState(false)
 
-  // 重設密碼函數
-  const resetPassword = async () => {
-    if (!resetPasswordInstructor || !newPassword) return
+  // 更新帳號密碼函數
+  const updateCredentials = async () => {
+    if (!resetPasswordInstructor) return
     
-    if (newPassword.length < 6) {
+    if (!newEmail && !newPassword) {
+      alert('請輸入新帳號或新密碼')
+      return
+    }
+
+    if (newPassword && newPassword.length < 6) {
       alert('密碼至少需要 6 個字元')
+      return
+    }
+
+    if (newEmail && !newEmail.includes('@')) {
+      alert('請輸入有效的 Email 地址')
       return
     }
 
@@ -125,22 +136,30 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: resetPasswordInstructor.id,
-          newPassword: newPassword,
+          newEmail: newEmail || undefined,
+          newPassword: newPassword || undefined,
         }),
       })
 
       const result = await response.json()
 
       if (result.success) {
-        alert(`密碼已成功重設！\n\n帳號：${resetPasswordInstructor.email}\n新密碼：${newPassword}`)
+        const finalEmail = newEmail || resetPasswordInstructor.email
+        let message = `更新成功！\n\n帳號：${finalEmail}`
+        if (newPassword) {
+          message += `\n新密碼：${newPassword}`
+        }
+        alert(message)
         setResetPasswordInstructor(null)
+        setNewEmail('')
         setNewPassword('')
+        fetchInstructors() // 重新載入講師列表
       } else {
-        alert(`重設失敗：${result.error}`)
+        alert(`更新失敗：${result.error}`)
       }
     } catch (err) {
-      console.error('重設密碼錯誤:', err)
-      alert('重設密碼時發生錯誤')
+      console.error('更新帳號密碼錯誤:', err)
+      alert('更新時發生錯誤')
     }
     setResettingPassword(false)
   }
@@ -1151,13 +1170,13 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* 重設密碼 Modal */}
+      {/* 帳號密碼管理 Modal */}
       {resetPasswordInstructor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-paper border-2 border-black shadow-hard max-w-md w-full">
             <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between">
               <div>
-                <h3 className="font-serif text-xl font-bold text-black">重設密碼</h3>
+                <h3 className="font-serif text-xl font-bold text-black">帳號密碼管理</h3>
                 <p className="text-sm text-ink-muted">
                   {resetPasswordInstructor.full_name || resetPasswordInstructor.display_name}
                 </p>
@@ -1165,6 +1184,7 @@ export default function AdminPage() {
               <button
                 onClick={() => {
                   setResetPasswordInstructor(null)
+                  setNewEmail('')
                   setNewPassword('')
                 }}
                 className="p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
@@ -1176,11 +1196,24 @@ export default function AdminPage() {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
-                  帳號（Email）
+                  目前帳號
                 </label>
                 <div className="input-editorial bg-paper-dark font-mono text-sm">
                   {resetPasswordInstructor.email}
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                  新帳號（Email）
+                </label>
+                <input
+                  type="email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  className="input-editorial font-mono"
+                  placeholder="留空則不更改"
+                />
               </div>
 
               <div>
@@ -1192,15 +1225,20 @@ export default function AdminPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="input-editorial font-mono"
-                  placeholder="輸入新密碼（至少 6 字元）"
+                  placeholder="留空則不更改（至少 6 字元）"
                   minLength={6}
                 />
               </div>
+
+              <p className="text-xs text-ink-muted">
+                💡 只需填寫要更改的欄位，不需更改的留空即可
+              </p>
 
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => {
                     setResetPasswordInstructor(null)
+                    setNewEmail('')
                     setNewPassword('')
                   }}
                   className="btn-editorial-outline flex-1"
@@ -1208,11 +1246,11 @@ export default function AdminPage() {
                   取消
                 </button>
                 <button
-                  onClick={resetPassword}
-                  disabled={resettingPassword || newPassword.length < 6}
+                  onClick={updateCredentials}
+                  disabled={resettingPassword || (!newEmail && !newPassword) || (newPassword.length > 0 && newPassword.length < 6)}
                   className="btn-editorial flex-1 disabled:opacity-50"
                 >
-                  {resettingPassword ? '重設中...' : '確認重設'}
+                  {resettingPassword ? '更新中...' : '確認更新'}
                 </button>
               </div>
             </div>

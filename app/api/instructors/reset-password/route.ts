@@ -1,46 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-// 管理員重設講師密碼
+// 管理員重設講師密碼和/或更改帳號
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, newPassword } = body
+    const { userId, newPassword, newEmail } = body
 
-    if (!userId || !newPassword) {
+    if (!userId) {
       return NextResponse.json({
         success: false,
-        error: '缺少必要參數（userId, newPassword）',
+        error: '缺少用戶 ID',
       }, { status: 400 })
     }
 
-    if (newPassword.length < 6) {
+    if (!newPassword && !newEmail) {
+      return NextResponse.json({
+        success: false,
+        error: '請提供新密碼或新 Email',
+      }, { status: 400 })
+    }
+
+    if (newPassword && newPassword.length < 6) {
       return NextResponse.json({
         success: false,
         error: '密碼至少需要 6 個字元',
       }, { status: 400 })
     }
 
-    // 使用 Admin API 重設密碼
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-      password: newPassword,
-    })
+    // 準備更新資料
+    const updateData: { password?: string; email?: string; email_confirm?: boolean } = {}
+    
+    if (newPassword) {
+      updateData.password = newPassword
+    }
+    
+    if (newEmail) {
+      updateData.email = newEmail
+      updateData.email_confirm = true // 自動確認新 Email
+    }
+
+    // 使用 Admin API 更新用戶
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, updateData)
 
     if (error) {
-      console.error('重設密碼錯誤:', error)
+      console.error('更新用戶錯誤:', error)
       return NextResponse.json({
         success: false,
         error: error.message,
       }, { status: 500 })
     }
 
+    // 如果更改了 Email，也要更新 profiles 表
+    if (newEmail) {
+      await supabaseAdmin
+        .from('profiles')
+        .update({ email: newEmail })
+        .eq('id', userId)
+    }
+
+    const messages = []
+    if (newEmail) messages.push('帳號已更改')
+    if (newPassword) messages.push('密碼已重設')
+
     return NextResponse.json({
       success: true,
-      message: '密碼已成功重設',
+      message: messages.join('、'),
     })
 
   } catch (error) {
-    console.error('重設密碼錯誤:', error)
+    console.error('更新用戶錯誤:', error)
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : '未知錯誤',
