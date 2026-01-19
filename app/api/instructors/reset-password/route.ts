@@ -40,14 +40,25 @@ export async function POST(request: NextRequest) {
       updateData.email_confirm = true // 自動確認新 Email
     }
 
+    console.log('準備更新用戶:', { userId, updateData: { ...updateData, password: updateData.password ? '***' : undefined } })
+
     // 使用 Admin API 更新用戶
-    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, updateData)
+    const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, updateData)
+
+    console.log('Supabase 回應:', { data: data ? 'success' : 'null', error })
 
     if (error) {
       console.error('更新用戶錯誤:', error)
       return NextResponse.json({
         success: false,
-        error: error.message,
+        error: `更新失敗: ${error.message}`,
+      }, { status: 500 })
+    }
+
+    if (!data) {
+      return NextResponse.json({
+        success: false,
+        error: '更新失敗: 無回應資料',
       }, { status: 500 })
     }
 
