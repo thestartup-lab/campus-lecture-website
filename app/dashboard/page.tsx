@@ -1033,25 +1033,22 @@ export default function DashboardPage() {
     setChangingPassword(true)
 
     try {
-      // 先用當前密碼重新驗證
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user?.email || '',
-        password: passwordForm.currentPassword,
+      // 使用 API 更改密碼（避免觸發客戶端 auth state 變化）
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          email: user?.email,
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
       })
 
-      if (signInError) {
-        setPasswordError('目前密碼不正確')
-        setChangingPassword(false)
-        return
-      }
+      const result = await response.json()
 
-      // 更新密碼
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: passwordForm.newPassword,
-      })
-
-      if (updateError) {
-        setPasswordError(updateError.message)
+      if (!result.success) {
+        setPasswordError(result.error || '更新失敗')
         setChangingPassword(false)
         return
       }
@@ -1064,7 +1061,7 @@ export default function DashboardPage() {
         confirmPassword: '',
       })
       
-      // 3 秒後關閉 Modal
+      // 2 秒後關閉 Modal
       setTimeout(() => {
         setShowChangePassword(false)
         setPasswordSuccess(false)
