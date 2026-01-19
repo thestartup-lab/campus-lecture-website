@@ -24,7 +24,8 @@ import {
   Plus,
   Trash2,
   Edit,
-  Eye
+  Eye,
+  Key
 } from 'lucide-react'
 
 interface Experience {
@@ -102,6 +103,47 @@ export default function AdminPage() {
   const [editExpertise, setEditExpertise] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+
+  // 重設密碼 Modal
+  const [resetPasswordInstructor, setResetPasswordInstructor] = useState<Instructor | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [resettingPassword, setResettingPassword] = useState(false)
+
+  // 重設密碼函數
+  const resetPassword = async () => {
+    if (!resetPasswordInstructor || !newPassword) return
+    
+    if (newPassword.length < 6) {
+      alert('密碼至少需要 6 個字元')
+      return
+    }
+
+    setResettingPassword(true)
+    try {
+      const response = await fetch('/api/instructors/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: resetPasswordInstructor.id,
+          newPassword: newPassword,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        alert(`密碼已成功重設！\n\n帳號：${resetPasswordInstructor.email}\n新密碼：${newPassword}`)
+        setResetPasswordInstructor(null)
+        setNewPassword('')
+      } else {
+        alert(`重設失敗：${result.error}`)
+      }
+    } catch (err) {
+      console.error('重設密碼錯誤:', err)
+      alert('重設密碼時發生錯誤')
+    }
+    setResettingPassword(false)
+  }
 
   // 檢查權限
   useEffect(() => {
@@ -669,6 +711,9 @@ export default function AdminPage() {
                           <p className="text-sm text-ink-muted truncate">
                             {instructor.title || (instructor.role === 'admin' ? '系統管理員' : '講師申請者')}
                           </p>
+                          <p className="text-xs text-ink-muted font-mono mt-1">
+                            📧 {instructor.email}
+                          </p>
                         </div>
                       </div>
 
@@ -697,6 +742,14 @@ export default function AdminPage() {
                         >
                           <Edit className="w-4 h-4" strokeWidth={1.5} />
                           <span className="hidden sm:inline">編輯</span>
+                        </button>
+                        <button
+                          onClick={() => setResetPasswordInstructor(instructor)}
+                          className="btn-editorial-outline text-sm py-2 px-3"
+                          title="重設密碼"
+                        >
+                          <Key className="w-4 h-4" strokeWidth={1.5} />
+                          <span className="hidden sm:inline">密碼</span>
                         </button>
                         {instructor.role !== 'admin' && (
                           <>
@@ -1094,6 +1147,75 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 重設密碼 Modal */}
+      {resetPasswordInstructor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-paper border-2 border-black shadow-hard max-w-md w-full">
+            <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-black">重設密碼</h3>
+                <p className="text-sm text-ink-muted">
+                  {resetPasswordInstructor.full_name || resetPasswordInstructor.display_name}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setResetPasswordInstructor(null)
+                  setNewPassword('')
+                }}
+                className="p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
+              >
+                <X className="w-5 h-5" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                  帳號（Email）
+                </label>
+                <div className="input-editorial bg-paper-dark font-mono text-sm">
+                  {resetPasswordInstructor.email}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+                  新密碼
+                </label>
+                <input
+                  type="text"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="input-editorial font-mono"
+                  placeholder="輸入新密碼（至少 6 字元）"
+                  minLength={6}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => {
+                    setResetPasswordInstructor(null)
+                    setNewPassword('')
+                  }}
+                  className="btn-editorial-outline flex-1"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={resetPassword}
+                  disabled={resettingPassword || newPassword.length < 6}
+                  className="btn-editorial flex-1 disabled:opacity-50"
+                >
+                  {resettingPassword ? '重設中...' : '確認重設'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

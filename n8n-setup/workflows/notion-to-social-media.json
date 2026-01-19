@@ -1,0 +1,387 @@
+{
+  "name": "Notion 多平台發佈",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "name": "排程檢查",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": "={{ $env.NOTION_DATABASE_ID }}",
+        "returnAll": false,
+        "limit": 10,
+        "filterType": "manual",
+        "matchType": "anyFilter",
+        "filters": {
+          "conditions": [
+            {
+              "key": "發佈狀態",
+              "condition": "equals",
+              "value": "已發佈"
+            }
+          ]
+        }
+      },
+      "name": "查詢待發佈文章",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [470, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "1",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.properties['發佈平台'].multi_select }}",
+              "operation": "contains",
+              "value2": "FB"
+            }
+          ]
+        }
+      },
+      "name": "檢查是否發佈到 FB",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [690, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v18.0/{{ $env.FACEBOOK_PAGE_ID }}/feed",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $env.FACEBOOK_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.properties['標題'].title[0].plain_text }}\n\n={{ $json.properties['內容'].rich_text[0].plain_text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "發佈到 Facebook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [910, 100]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.properties['發佈平台'].multi_select }}",
+              "operation": "contains",
+              "value2": "Threads"
+            }
+          ]
+        }
+      },
+      "name": "檢查是否發佈到 Threads",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [690, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.threads.net/v1.0/{{ $env.THREADS_USER_ID }}/threads",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $env.THREADS_ACCESS_TOKEN }}"
+            },
+            {
+              "name": "media_type",
+              "value": "TEXT"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.properties['標題'].title[0].plain_text }}\n\n={{ $json.properties['內容'].rich_text[0].plain_text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "建立 Threads 容器",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.threads.net/v1.0/{{ $env.THREADS_USER_ID }}/threads_publish",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $env.THREADS_ACCESS_TOKEN }}"
+            },
+            {
+              "name": "creation_id",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "發佈 Threads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1130, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.properties['發佈平台'].multi_select }}",
+              "operation": "contains",
+              "value2": "LINE"
+            }
+          ]
+        }
+      },
+      "name": "檢查是否發佈到 LINE",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [690, 600]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.line.me/v2/bot/message/push",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.LINE_CHANNEL_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"to\": \"{{ $env.LINE_GROUP_ID }}\",\n  \"messages\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"{{ $json.properties['標題'].title[0].plain_text }}\\n\\n{{ $json.properties['內容'].rich_text[0].plain_text }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "name": "發佈到 LINE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [910, 500]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "pageId": "={{ $json.id }}",
+        "updateFields": {
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "FB 發佈狀態",
+                "selectValue": "成功"
+              },
+              {
+                "key": "FB 貼文連結",
+                "urlValue": "=https://facebook.com/{{ $json.id }}"
+              },
+              {
+                "key": "Threads 發佈狀態",
+                "selectValue": "成功"
+              },
+              {
+                "key": "LINE 發佈狀態",
+                "selectValue": "成功"
+              }
+            ]
+          }
+        }
+      },
+      "name": "更新 Notion 發佈狀態",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [1350, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "1",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "name": "合併結果",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [1130, 400]
+    },
+    {
+      "parameters": {
+        "content": "## Notion 多平台發佈系統\n\n此 Workflow 會：\n1. 每 15 分鐘檢查 Notion 資料庫\n2. 找出「發佈狀態」為「已發佈」的文章\n3. 根據「發佈平台」欄位，分別發佈到：\n   - Facebook 粉專\n   - Threads\n   - LINE 社群\n   - Skool（需額外處理）\n4. 回寫發佈狀態到 Notion\n\n### 設定步驟：\n\n1. 設定 Notion 憑證\n2. 在環境變數設定各平台的 API Token\n3. 測試執行並檢查結果\n\n### 環境變數：\n\n- NOTION_DATABASE_ID\n- FACEBOOK_PAGE_ID\n- FACEBOOK_ACCESS_TOKEN\n- THREADS_USER_ID\n- THREADS_ACCESS_TOKEN\n- LINE_CHANNEL_ACCESS_TOKEN\n- LINE_GROUP_ID",
+        "height": 464,
+        "width": 389
+      },
+      "name": "說明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 460]
+    }
+  ],
+  "connections": {
+    "排程檢查": {
+      "main": [
+        [
+          {
+            "node": "查詢待發佈文章",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查詢待發佈文章": {
+      "main": [
+        [
+          {
+            "node": "檢查是否發佈到 FB",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "檢查是否發佈到 Threads",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "檢查是否發佈到 LINE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "檢查是否發佈到 FB": {
+      "main": [
+        [
+          {
+            "node": "發佈到 Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "發佈到 Facebook": {
+      "main": [
+        [
+          {
+            "node": "合併結果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "檢查是否發佈到 Threads": {
+      "main": [
+        [
+          {
+            "node": "建立 Threads 容器",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "建立 Threads 容器": {
+      "main": [
+        [
+          {
+            "node": "發佈 Threads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "發佈 Threads": {
+      "main": [
+        [
+          {
+            "node": "合併結果",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "檢查是否發佈到 LINE": {
+      "main": [
+        [
+          {
+            "node": "發佈到 LINE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "發佈到 LINE": {
+      "main": [
+        [
+          {
+            "node": "合併結果",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "合併結果": {
+      "main": [
+        [
+          {
+            "node": "更新 Notion 發佈狀態",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+# 環境變數（包含敏感資訊）
+.env
+
+# n8n 資料
+n8n_data/
+
+# Docker volumes
+volumes/
+
+# 備份檔案
+backups/*.json
+backups/*.zip
+
+# 日誌
+*.log
+
+# macOS
+.DS_Store
+
+# 暫存檔
+*.tmp
+*.temp
