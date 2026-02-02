@@ -661,11 +661,19 @@ export async function createPost(
 
     const pageId = 'id' in response ? response.id : undefined
 
+    // Debug: 檢查內容狀態
+    console.log('頁面建立後檢查:', {
+      pageId: pageId,
+      hasContent: !!data.content,
+      contentLength: data.content?.length || 0,
+    })
+
     // 🆕 如果有內容，寫入頁面 body
     if (pageId && data.content && data.content.trim()) {
       console.log('開始寫入文章內容到 Notion 頁面...')
       try {
         const contentBlocks = htmlToNotionBlocks(data.content)
+        console.log('轉換後的 blocks 數量:', contentBlocks.length)
         
         if (contentBlocks.length > 0) {
           // 將 blocks 分批寫入（Notion API 限制每次最多 100 個 blocks）
@@ -683,6 +691,12 @@ export async function createPost(
         console.error('寫入文章內容失敗:', contentError)
         // 不影響頁面建立，只記錄錯誤
       }
+    } else {
+      console.log('未寫入內容，原因:', {
+        noPageId: !pageId,
+        noContent: !data.content,
+        emptyContent: data.content && !data.content.trim()
+      })
     }
 
     return {

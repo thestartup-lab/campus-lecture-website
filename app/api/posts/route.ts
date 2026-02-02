@@ -82,6 +82,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Debug: 檢查收到的資料
+    console.log('收到的文章資料:', {
+      title: body.title,
+      hasContent: !!body.content,
+      contentLength: body.content?.length || 0,
+    })
+
     const postData: NotionPost = {
       title: body.title,
       excerpt: body.excerpt || '',
