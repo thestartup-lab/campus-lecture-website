@@ -42,7 +42,8 @@ export default function RichTextEditorCore({ content, onChange, placeholder = '�
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // 保留 StarterKit 的所有預設 extensions
+        // StarterKit v3 已包含 Link，不需要額外添加
+        // 這裡保留所有預設 extensions
       }),
       Image.configure({
         HTMLAttributes: {
