@@ -48,13 +48,30 @@ export interface LectureApplication {
 
 /**
  * 從資料庫取得 dataSourceId
+ * Notion SDK v5+ 需要使用 dataSources.query 而非 databases.query
+ * dataSourceId 可從資料庫的 data_sources 屬性中取得
  */
 async function getDataSourceId(databaseId: string): Promise<string | null> {
   try {
+    console.log('🔍 正在獲取資料庫資訊，database_id:', databaseId)
     const database = await notion.databases.retrieve({ database_id: databaseId })
+    console.log('📋 資料庫資訊:', {
+      id: database.id,
+      title: (database as unknown as { title?: Array<{ plain_text: string }> }).title?.[0]?.plain_text,
+      hasDataSources: !!(database as unknown as { data_sources?: unknown[] }).data_sources,
+    })
     const dataSources = (database as unknown as { data_sources?: Array<{ id: string }> }).data_sources
-    return dataSources?.[0]?.id || null
-  } catch {
+    if (!dataSources || dataSources.length === 0) {
+      console.error('❌ 資料庫沒有 data_sources 屬性，這可能是因為：')
+      console.error('   1. 資料庫沒有啟用 Sync 功能')
+      console.error('   2. Integration 沒有足夠的權限')
+      console.error('   完整資料庫資訊:', JSON.stringify(database, null, 2))
+      return null
+    }
+    console.log('✅ 成功獲取 dataSourceId:', dataSources[0].id)
+    return dataSources[0].id
+  } catch (error) {
+    console.error('❌ 獲取資料庫資訊失敗:', error)
     return null
   }
 }
@@ -82,7 +99,7 @@ export async function createLectureApplication(
     // 取得 dataSourceId
     const dataSourceId = await getDataSourceId(LECTURE_APPLICATIONS_DB_ID)
     if (!dataSourceId) {
-      throw new Error('無法取得資料來源 ID')
+      throw new Error('無法取得資料來源 ID，請確認資料庫已正確設定')
     }
 
     // SDK v5+: 使用 pages.create 但 parent 使用 data_source_id
@@ -811,7 +828,7 @@ export async function getTestimonials(options?: {
       throw new Error('無法取得回饋資料來源 ID')
     }
 
-// 建立篩選條件
+    // 建立篩選條件
     const filters: unknown[] = []
 
     if (options?.approvedOnly) {
