@@ -662,41 +662,61 @@ export async function createPost(
     const pageId = 'id' in response ? response.id : undefined
 
     // Debug: 檢查內容狀態
-    console.log('頁面建立後檢查:', {
-      pageId: pageId,
-      hasContent: !!data.content,
-      contentLength: data.content?.length || 0,
-    })
+    console.log('===== DEBUG: 頁面建立後檢查 =====')
+    console.log('pageId:', pageId)
+    console.log('data.content 存在嗎?', !!data.content)
+    console.log('data.content 長度:', data.content?.length || 0)
+    console.log('data.content 前100字:', data.content?.substring(0, 100) || '(空)')
+    console.log('================================')
 
     // 🆕 如果有內容，寫入頁面 body
     if (pageId && data.content && data.content.trim()) {
-      console.log('開始寫入文章內容到 Notion 頁面...')
+      console.log('✅ 條件通過，開始寫入文章內容到 Notion 頁面...')
       try {
+        console.log('呼叫 htmlToNotionBlocks...')
         const contentBlocks = htmlToNotionBlocks(data.content)
+        console.log('✅ htmlToNotionBlocks 完成')
         console.log('轉換後的 blocks 數量:', contentBlocks.length)
+        console.log('第一個 block:', JSON.stringify(contentBlocks[0] || {}).substring(0, 200))
         
         if (contentBlocks.length > 0) {
+          console.log(`準備寫入 ${contentBlocks.length} 個 blocks...`)
           // 將 blocks 分批寫入（Notion API 限制每次最多 100 個 blocks）
           const batchSize = 100
           for (let i = 0; i < contentBlocks.length; i += batchSize) {
             const batch = contentBlocks.slice(i, i + batchSize)
-            await notion.blocks.children.append({
-              block_id: pageId,
-              children: batch as any,
-            })
+            console.log(`寫入第 ${i}~${i + batch.length} 個 blocks...`)
+            try {
+              const appendResult = await notion.blocks.children.append({
+                block_id: pageId,
+                children: batch as any,
+              })
+              console.log(`✅ 批次 ${i} 寫入成功，結果:`, appendResult.results?.length, '個 blocks')
+            } catch (appendError) {
+              console.error(`❌ 批次 ${i} 寫入失敗:`, appendError)
+              throw appendError
+            }
           }
-          console.log(`成功寫入 ${contentBlocks.length} 個內容區塊`)
+          console.log(`🎉 成功寫入 ${contentBlocks.length} 個內容區塊`)
+        } else {
+          console.log('⚠️ contentBlocks 是空的，沒有內容可寫入')
         }
       } catch (contentError) {
-        console.error('寫入文章內容失敗:', contentError)
+        console.error('❌❌❌ 寫入文章內容失敗 ❌❌❌')
+        console.error('錯誤:', contentError)
+        if (contentError instanceof Error) {
+          console.error('錯誤訊息:', contentError.message)
+        }
+        if ((contentError as any).body) {
+          console.error('Notion API 錯誤:', JSON.stringify((contentError as any).body, null, 2))
+        }
         // 不影響頁面建立，只記錄錯誤
       }
     } else {
-      console.log('未寫入內容，原因:', {
-        noPageId: !pageId,
-        noContent: !data.content,
-        emptyContent: data.content && !data.content.trim()
-      })
+      console.log('❌ 未寫入內容！條件檢查失敗:')
+      console.log('  - pageId 存在?', !!pageId)
+      console.log('  - data.content 存在?', !!data.content)
+      console.log('  - data.content.trim() 非空?', data.content ? !!data.content.trim() : false)
     }
 
     return {
