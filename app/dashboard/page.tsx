@@ -1223,6 +1223,13 @@ export default function DashboardPage() {
         console.log('content 內容:', articleForm.content)
         console.log('================================')
         
+        // 🚨 DEBUG: 彈出提示框顯示內容
+        const contentPreview = articleForm.content?.substring(0, 100) || '(空的)'
+        if (!confirm(`準備發送文章\n\n標題: ${articleForm.title}\n內容長度: ${articleForm.content?.length || 0}\n內容預覽: ${contentPreview}\n\n確認發布？`)) {
+          setSavingArticle(false)
+          return
+        }
+        
         const response = await fetch('/api/posts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
