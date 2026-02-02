@@ -12,7 +12,6 @@
     "@notionhq/client": "^5.6.0",
     "@supabase/supabase-js": "^2.90.0",
     "@tiptap/extension-image": "^3.15.3",
-    "@tiptap/extension-link": "^3.15.3",
     "@tiptap/extension-placeholder": "^3.15.3",
     "@tiptap/react": "^3.15.3",
     "@tiptap/starter-kit": "^3.15.3",

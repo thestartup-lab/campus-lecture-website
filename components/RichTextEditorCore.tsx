@@ -2,7 +2,6 @@
 
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import { useEffect, useCallback, useRef } from 'react'
@@ -42,13 +41,8 @@ export default function RichTextEditorCore({ content, onChange, placeholder = '�
 
   const editor = useEditor({
     extensions: [
+      // StarterKit 在 TipTap 3.x 已包含 Link，不需要額外添加
       StarterKit,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-blue-600 underline',
-        },
-      }),
       Image.configure({
         HTMLAttributes: {
           class: 'max-w-full h-auto rounded-lg my-4',
@@ -63,7 +57,17 @@ export default function RichTextEditorCore({ content, onChange, placeholder = '�
     shouldRerenderOnTransaction: false,
     onUpdate: ({ editor }) => {
       if (!isDestroying.current) {
-        onChange(editor.getHTML())
+        const html = editor.getHTML()
+        console.log('📝 編輯器內容更新:', html.length, '字元')
+        onChange(html)
+      }
+    },
+    onBlur: ({ editor }) => {
+      // 失去焦點時也觸發一次，確保內容被保存
+      if (!isDestroying.current) {
+        const html = editor.getHTML()
+        console.log('📝 編輯器失去焦點，保存內容:', html.length, '字元')
+        onChange(html)
       }
     },
     editorProps: {
