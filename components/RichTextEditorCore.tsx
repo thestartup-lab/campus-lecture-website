@@ -63,7 +63,12 @@ export default function RichTextEditorCore({ content, onChange, placeholder = '�
     shouldRerenderOnTransaction: false,
     onUpdate: ({ editor }) => {
       if (!isDestroying.current) {
-        onChange(editor.getHTML())
+        const html = editor.getHTML()
+        console.log('🔍 編輯器 onUpdate 觸發:', {
+          htmlLength: html.length,
+          htmlPreview: html.substring(0, 100)
+        })
+        onChange(html)
       }
     },
     editorProps: {
