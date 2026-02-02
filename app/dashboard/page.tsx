@@ -1215,6 +1215,15 @@ export default function DashboardPage() {
         }
       } else {
         // 新增文章
+        
+        // 🔧 強制失去焦點，確保編輯器內容被保存
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur()
+        }
+        
+        // 等待 100ms 讓 onChange 有時間觸發
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
         // 🔍 DEBUG: 檢查要發送的資料
         console.log('===== 前端準備發送的資料 =====')
         console.log('標題:', articleForm.title)
@@ -1222,13 +1231,6 @@ export default function DashboardPage() {
         console.log('content 長度:', articleForm.content?.length || 0)
         console.log('content 內容:', articleForm.content)
         console.log('================================')
-        
-        // 🚨 DEBUG: 彈出提示框顯示內容
-        const contentPreview = articleForm.content?.substring(0, 100) || '(空的)'
-        if (!confirm(`準備發送文章\n\n標題: ${articleForm.title}\n內容長度: ${articleForm.content?.length || 0}\n內容預覽: ${contentPreview}\n\n確認發布？`)) {
-          setSavingArticle(false)
-          return
-        }
         
         const response = await fetch('/api/posts', {
           method: 'POST',
