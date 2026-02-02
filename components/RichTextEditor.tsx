@@ -39,7 +39,13 @@ export default function RichTextEditor({ content, onChange, placeholder = '開�
         </div>
         <textarea
           value={content.replace(/<[^>]*>/g, '')}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            console.log('🔍 純文字編輯器 onChange 觸發:', {
+              valueLength: e.target.value.length,
+              valuePreview: e.target.value.substring(0, 50)
+            })
+            onChange(e.target.value)
+          }}
           placeholder={placeholder}
           className="w-full min-h-[300px] p-4 resize-none focus:outline-none bg-white text-black"
         />

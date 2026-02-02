@@ -2981,7 +2981,18 @@ export default function DashboardPage() {
                 </label>
                 <RichTextEditor
                   content={articleForm.content}
-                  onChange={(content) => setArticleForm(prev => ({ ...prev, content }))}
+                  onChange={(content) => {
+                    console.log('🔍 Dashboard 收到 onChange:', {
+                      contentLength: content.length,
+                      contentPreview: content.substring(0, 50)
+                    })
+                    setArticleForm(prev => {
+                      console.log('🔍 更新前 articleForm.content:', prev.content?.length || 0)
+                      const newForm = { ...prev, content }
+                      console.log('🔍 更新後 articleForm.content:', newForm.content?.length || 0)
+                      return newForm
+                    })
+                  }}
                   placeholder="開始撰寫您的文章..."
                 />
                 <p className="text-xs text-ink-muted mt-2">
