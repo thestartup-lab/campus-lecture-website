@@ -1215,6 +1215,14 @@ export default function DashboardPage() {
         }
       } else {
         // 新增文章
+        // 🔍 DEBUG: 檢查要發送的資料
+        console.log('===== 前端準備發送的資料 =====')
+        console.log('標題:', articleForm.title)
+        console.log('content 存在?', !!articleForm.content)
+        console.log('content 長度:', articleForm.content?.length || 0)
+        console.log('content 內容:', articleForm.content)
+        console.log('================================')
+        
         const response = await fetch('/api/posts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
