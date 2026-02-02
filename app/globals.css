@@ -6,19 +6,20 @@
    ======================================== */
 
 :root {
-  /* 單色調配色 Monochrome */
-  --color-paper: #FAFAF8;      /* 紙張米白色 */
-  --color-paper-dark: #F5F5F0; /* 較深的紙張色 */
-  --color-ink: #000000;        /* 純黑墨水色 */
-  --color-ink-light: #333333;  /* 淺黑色 */
-  --color-ink-muted: #666666;  /* 灰色 */
-  --color-border: #000000;     /* 邊框色 */
+  /* 全域影響力超業學院配色 */
+  --color-bg: #000000;         /* 深黑色背景 */
+  --color-bg-light: #1a1a1a;   /* 稍亮的背景 */
+  --color-text: #FFFFFF;       /* 白色文字 */
+  --color-text-muted: #a0a0a0; /* 灰色文字 */
+  --color-primary: #FF6B00;    /* 活力橘主色 */
+  --color-primary-hover: #ff8533; /* 活力橘 hover */
+  --color-border: #333333;     /* 邊框色 */
   
   /* 硬陰影 Hard Shadow */
-  --shadow-hard: 4px 4px 0px 0px rgba(0,0,0,1);
-  --shadow-hard-sm: 2px 2px 0px 0px rgba(0,0,0,1);
-  --shadow-hard-lg: 6px 6px 0px 0px rgba(0,0,0,1);
-  --shadow-hard-hover: 6px 6px 0px 0px rgba(0,0,0,1);
+  --shadow-hard: 4px 4px 0px 0px rgba(255,107,0,0.5);
+  --shadow-hard-sm: 2px 2px 0px 0px rgba(255,107,0,0.5);
+  --shadow-hard-lg: 6px 6px 0px 0px rgba(255,107,0,0.5);
+  --shadow-hard-hover: 6px 6px 0px 0px rgba(255,107,0,0.8);
   
   /* 字體 */
   --font-serif: var(--font-playfair), 'Playfair Display', Georgia, 'Times New Roman', serif;
@@ -26,19 +27,22 @@
 }
 
 @theme inline {
-  --color-paper: #FAFAF8;
-  --color-paper-dark: #F5F5F0;
-  --color-ink: #000000;
-  --color-ink-light: #333333;
-  --color-ink-muted: #666666;
+  /* 基礎顏色變數 */
+  --color-bg: #000000;
+  --color-bg-light: #1a1a1a;
+  --color-text: #FFFFFF;
+  --color-text-muted: #a0a0a0;
+  --color-primary: #FF6B00;
+  --color-primary-hover: #ff8533;
+  --color-border: #333333;
   --font-sans: var(--font-inter);
   --font-serif: var(--font-playfair);
 }
 
 /* 基礎樣式 */
 body {
-  background-color: var(--color-paper);
-  color: var(--color-ink);
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-sans);
   line-height: 1.7;
   letter-spacing: -0.01em;
@@ -50,6 +54,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
+  color: var(--color-text);
 }
 
 /* ========================================
@@ -57,12 +62,16 @@ h1, h2, h3, h4, h5, h6 {
    ======================================== */
 
 /* 背景色 */
-.bg-paper {
-  background-color: var(--color-paper);
+.bg-dark {
+  background-color: var(--color-bg);
 }
 
-.bg-paper-dark {
-  background-color: var(--color-paper-dark);
+.bg-dark-light {
+  background-color: var(--color-bg-light);
+}
+
+.bg-primary {
+  background-color: var(--color-primary);
 }
 
 /* 字體 */
@@ -89,15 +98,17 @@ h1, h2, h3, h4, h5, h6 {
 
 /* 粗邊框卡片 */
 .card-editorial {
-  background-color: white;
-  border: 2px solid var(--color-ink);
+  background-color: var(--color-bg-light);
+  border: 2px solid var(--color-primary);
   box-shadow: var(--shadow-hard);
   transition: all 0.2s ease;
+  color: var(--color-text);
 }
 
 .card-editorial:hover {
   box-shadow: var(--shadow-hard-hover);
   transform: translate(-2px, -2px);
+  border-color: var(--color-primary-hover);
 }
 
 /* 編輯風格按鈕 */
@@ -107,9 +118,9 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.875rem 1.75rem;
-  background-color: var(--color-ink);
-  color: var(--color-paper);
-  border: 2px solid var(--color-ink);
+  background-color: var(--color-primary);
+  color: #000000;
+  border: 2px solid var(--color-primary);
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 0.875rem;
@@ -121,8 +132,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-editorial:hover {
-  background-color: var(--color-paper);
-  color: var(--color-ink);
+  background-color: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
   transform: translate(-2px, -2px);
   box-shadow: var(--shadow-hard);
 }
@@ -134,8 +145,8 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.5rem;
   padding: 0.875rem 1.75rem;
   background-color: transparent;
-  color: var(--color-ink);
-  border: 2px solid var(--color-ink);
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 0.875rem;
@@ -146,8 +157,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-editorial-outline:hover {
-  background-color: var(--color-ink);
-  color: var(--color-paper);
+  background-color: var(--color-primary);
+  color: #000000;
   box-shadow: var(--shadow-hard-sm);
   transform: translate(-2px, -2px);
 }
@@ -156,9 +167,9 @@ h1, h2, h3, h4, h5, h6 {
 .input-editorial {
   width: 100%;
   padding: 0.875rem 1rem;
-  background-color: white;
-  color: var(--color-ink);
-  border: 2px solid var(--color-ink);
+  background-color: var(--color-bg-light);
+  color: var(--color-text);
+  border: 2px solid var(--color-border);
   font-family: var(--font-sans);
   font-size: 1rem;
   transition: all 0.15s ease;
@@ -166,21 +177,22 @@ h1, h2, h3, h4, h5, h6 {
 
 .input-editorial:focus {
   outline: none;
+  border-color: var(--color-primary);
   box-shadow: var(--shadow-hard-sm);
   transform: translate(-2px, -2px);
 }
 
 .input-editorial::placeholder {
-  color: var(--color-ink-muted);
+  color: var(--color-text-muted);
 }
 
 /* 講師照片容器 - 黑白濾鏡 + 粗邊框 */
 .photo-editorial {
   position: relative;
-  border: 3px solid var(--color-ink);
+  border: 3px solid var(--color-primary);
   box-shadow: var(--shadow-hard);
   overflow: hidden;
-  background-color: var(--color-paper-dark);
+  background-color: var(--color-bg-light);
 }
 
 .photo-editorial img {
@@ -198,11 +210,11 @@ h1, h2, h3, h4, h5, h6 {
 /* 照片容器 - 圓形版本 */
 .photo-editorial-round {
   position: relative;
-  border: 3px solid var(--color-ink);
+  border: 3px solid var(--color-primary);
   border-radius: 50%;
   box-shadow: var(--shadow-hard);
   overflow: hidden;
-  background-color: var(--color-paper-dark);
+  background-color: var(--color-bg-light);
 }
 
 .photo-editorial-round img {
@@ -220,13 +232,13 @@ h1, h2, h3, h4, h5, h6 {
 /* 分隔線 */
 .divider-editorial {
   height: 2px;
-  background-color: var(--color-ink);
+  background-color: var(--color-primary);
   margin: 2rem 0;
 }
 
 .divider-editorial-thin {
   height: 1px;
-  background-color: var(--color-ink);
+  background-color: var(--color-border);
   margin: 1rem 0;
 }
 
@@ -236,8 +248,8 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   padding: 0.375rem 0.75rem;
   background-color: transparent;
-  color: var(--color-ink);
-  border: 1px solid var(--color-ink);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
   font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 500;
@@ -247,8 +259,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .tag-editorial:hover {
-  background-color: var(--color-ink);
-  color: var(--color-paper);
+  background-color: var(--color-primary);
+  color: #000000;
 }
 
 /* 引用區塊 */
@@ -256,11 +268,12 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   padding: 2rem;
   padding-left: 3rem;
-  border-left: 4px solid var(--color-ink);
+  border-left: 4px solid var(--color-primary);
   font-family: var(--font-serif);
   font-size: 1.25rem;
   font-style: italic;
   line-height: 1.6;
+  color: var(--color-text);
 }
 
 .blockquote-editorial::before {
@@ -270,8 +283,8 @@ h1, h2, h3, h4, h5, h6 {
   top: 0.5rem;
   font-size: 4rem;
   font-family: var(--font-serif);
-  color: var(--color-ink);
-  opacity: 0.2;
+  color: var(--color-primary);
+  opacity: 0.3;
   line-height: 1;
 }
 
@@ -283,6 +296,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
+  color: var(--color-text);
 }
 
 .section-title::after {
@@ -292,7 +306,7 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 3rem;
   height: 3px;
-  background-color: var(--color-ink);
+  background-color: var(--color-primary);
 }
 
 /* ========================================
@@ -342,8 +356,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* 選取文字顏色 */
 ::selection {
-  background-color: var(--color-ink);
-  color: var(--color-paper);
+  background-color: var(--color-primary);
+  color: #000000;
 }
 
 /* 滾動條樣式 */
@@ -352,16 +366,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-paper);
+  background: var(--color-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-ink);
-  border: 2px solid var(--color-paper);
+  background: var(--color-primary);
+  border: 2px solid var(--color-bg);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ink-light);
+  background: var(--color-primary-hover);
 }
 
 /* ========================================
@@ -374,8 +388,8 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   margin-top: 2.5rem;
   margin-bottom: 1rem;
-  color: #000;
-  border-bottom: 2px solid #000;
+  color: var(--color-text);
+  border-bottom: 2px solid var(--color-primary);
   padding-bottom: 0.5rem;
 }
 
@@ -385,7 +399,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   margin-top: 2rem;
   margin-bottom: 0.75rem;
-  color: #000;
+  color: var(--color-text);
 }
 
 .notion-content h3 {
@@ -394,19 +408,20 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
-  color: #000;
+  color: var(--color-text);
 }
 
 .notion-content p {
   margin-bottom: 1.25rem;
   line-height: 1.8;
-  color: #333;
+  color: var(--color-text);
 }
 
 .notion-content ul,
 .notion-content ol {
   margin-bottom: 1.25rem;
   padding-left: 1.5rem;
+  color: var(--color-text);
 }
 
 .notion-content li {
@@ -415,20 +430,20 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .notion-content blockquote {
-  border-left: 4px solid #000;
+  border-left: 4px solid var(--color-primary);
   padding-left: 1.5rem;
   margin: 1.5rem 0;
   font-style: italic;
-  color: #555;
+  color: var(--color-text-muted);
 }
 
 .notion-content pre {
-  background: #1a1a1a;
-  color: #f5f5f5;
+  background: var(--color-bg-light);
+  color: var(--color-text);
   padding: 1.5rem;
   overflow-x: auto;
   margin: 1.5rem 0;
-  border: 2px solid #000;
+  border: 2px solid var(--color-primary);
 }
 
 .notion-content code {
@@ -437,20 +452,22 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .notion-content p code {
-  background: #f0f0f0;
+  background: var(--color-bg-light);
   padding: 0.2rem 0.4rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
 }
 
 .notion-content a {
-  color: #000;
+  color: var(--color-primary);
   text-decoration: underline;
   text-underline-offset: 3px;
+  transition: all 0.15s ease;
 }
 
 .notion-content a:hover {
-  background: #000;
-  color: #fff;
+  background: var(--color-primary);
+  color: #000;
 }
 
 .notion-content figure {
@@ -460,19 +477,19 @@ h1, h2, h3, h4, h5, h6 {
 .notion-content img {
   max-width: 100%;
   height: auto;
-  border: 2px solid #000;
+  border: 2px solid var(--color-primary);
 }
 
 .notion-content figcaption {
   text-align: center;
   font-size: 0.875rem;
-  color: #666;
+  color: var(--color-text-muted);
   margin-top: 0.5rem;
 }
 
 .notion-content hr {
   border: none;
-  border-top: 2px solid #000;
+  border-top: 2px solid var(--color-primary);
   margin: 2rem 0;
 }
 
@@ -480,13 +497,15 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   gap: 1rem;
   padding: 1rem 1.5rem;
-  background: #f9f9f9;
-  border: 2px solid #000;
+  background: var(--color-bg-light);
+  border: 2px solid var(--color-primary);
   margin: 1.5rem 0;
+  color: var(--color-text);
 }
 
 .notion-content .callout-icon {
   font-size: 1.5rem;
+  color: var(--color-primary);
 }
 
 .notion-content .video-embed {
@@ -502,19 +521,20 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   width: 100%;
   height: 100%;
-  border: 2px solid #000;
+  border: 2px solid var(--color-primary);
 }
 
 .notion-content .bookmark {
   display: block;
   padding: 1rem;
-  border: 2px solid #000;
+  border: 2px solid var(--color-primary);
   margin: 1rem 0;
   text-decoration: none;
-  color: #000;
+  color: var(--color-text);
+  transition: all 0.15s ease;
 }
 
 .notion-content .bookmark:hover {
-  background: #000;
-  color: #fff;
+  background: var(--color-primary);
+  color: #000;
 }

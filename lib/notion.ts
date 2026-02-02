@@ -521,6 +521,94 @@ export async function getFeaturedPosts(limit: number = 3): Promise<{ success: bo
 /**
  * 建立文章
  */
+/**
+ * 將 HTML 轉換為 Notion blocks（簡化版）
+ */
+function htmlToNotionBlocks(html: string): Array<{
+  object: 'block'
+  type: string
+  [key: string]: unknown
+}> {
+  if (!html || html.trim() === '') {
+    return []
+  }
+
+  const blocks: Array<{
+    object: 'block'
+    type: string
+    [key: string]: unknown
+  }> = []
+
+  // 移除 HTML 標籤，分段處理
+  const tempDiv = typeof document !== 'undefined' ? document.createElement('div') : null
+  if (tempDiv) {
+    tempDiv.innerHTML = html
+  }
+
+  // 簡單的 HTML 解析（將每個段落轉換為 paragraph block）
+  const lines = html
+    .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '\n# $1\n')
+    .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '\n## $1\n')
+    .replace(/<h3[^>]*>(.*?)<\/h3>/gi, '\n### $1\n')
+    .replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<li[^>]*>(.*?)<\/li>/gi, '• $1\n')
+    .replace(/<[^>]+>/g, '') // 移除其他 HTML 標籤
+    .split('\n')
+    .filter(line => line.trim())
+
+  for (const line of lines) {
+    const trimmedLine = line.trim()
+    if (!trimmedLine) continue
+
+    // 處理標題
+    if (trimmedLine.startsWith('# ')) {
+      blocks.push({
+        object: 'block',
+        type: 'heading_1',
+        heading_1: {
+          rich_text: [{ type: 'text', text: { content: trimmedLine.substring(2) } }],
+        },
+      })
+    } else if (trimmedLine.startsWith('## ')) {
+      blocks.push({
+        object: 'block',
+        type: 'heading_2',
+        heading_2: {
+          rich_text: [{ type: 'text', text: { content: trimmedLine.substring(3) } }],
+        },
+      })
+    } else if (trimmedLine.startsWith('### ')) {
+      blocks.push({
+        object: 'block',
+        type: 'heading_3',
+        heading_3: {
+          rich_text: [{ type: 'text', text: { content: trimmedLine.substring(4) } }],
+        },
+      })
+    } else if (trimmedLine.startsWith('• ')) {
+      blocks.push({
+        object: 'block',
+        type: 'bulleted_list_item',
+        bulleted_list_item: {
+          rich_text: [{ type: 'text', text: { content: trimmedLine.substring(2) } }],
+        },
+      })
+    } else {
+      // 一般段落
+      blocks.push({
+        object: 'block',
+        type: 'paragraph',
+        paragraph: {
+          rich_text: [{ type: 'text', text: { content: trimmedLine } }],
+        },
+      })
+    }
+  }
+
+  return blocks
+}
+
 export async function createPost(
   data: NotionPost
 ): Promise<{ success: boolean; pageId?: string; error?: string }> {
@@ -571,9 +659,35 @@ export async function createPost(
       properties: properties as any,
     })
 
+    const pageId = 'id' in response ? response.id : undefined
+
+    // 🆕 如果有內容，寫入頁面 body
+    if (pageId && data.content && data.content.trim()) {
+      console.log('開始寫入文章內容到 Notion 頁面...')
+      try {
+        const contentBlocks = htmlToNotionBlocks(data.content)
+        
+        if (contentBlocks.length > 0) {
+          // 將 blocks 分批寫入（Notion API 限制每次最多 100 個 blocks）
+          const batchSize = 100
+          for (let i = 0; i < contentBlocks.length; i += batchSize) {
+            const batch = contentBlocks.slice(i, i + batchSize)
+            await notion.blocks.children.append({
+              block_id: pageId,
+              children: batch as any,
+            })
+          }
+          console.log(`成功寫入 ${contentBlocks.length} 個內容區塊`)
+        }
+      } catch (contentError) {
+        console.error('寫入文章內容失敗:', contentError)
+        // 不影響頁面建立，只記錄錯誤
+      }
+    }
+
     return {
       success: true,
-      pageId: 'id' in response ? response.id : undefined,
+      pageId,
     }
   } catch (error) {
     console.error('建立文章失敗:', error)
