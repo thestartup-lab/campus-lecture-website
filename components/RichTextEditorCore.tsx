@@ -60,13 +60,24 @@ export default function RichTextEditorCore({ content, onChange, placeholder = '�
     ],
     content,
     immediatelyRender: false,
-    shouldRerenderOnTransaction: false,
+    // 🔧 修復：允許重新渲染以觸發 onUpdate
+    shouldRerenderOnTransaction: true,
     onUpdate: ({ editor }) => {
       if (!isDestroying.current) {
         const html = editor.getHTML()
         console.log('🔍 編輯器 onUpdate 觸發:', {
           htmlLength: html.length,
           htmlPreview: html.substring(0, 100)
+        })
+        onChange(html)
+      }
+    },
+    // 🆕 添加 onBlur 回調作為備用
+    onBlur: ({ editor }) => {
+      if (!isDestroying.current) {
+        const html = editor.getHTML()
+        console.log('🔍 編輯器 onBlur 觸發 (失去焦點):', {
+          htmlLength: html.length
         })
         onChange(html)
       }
