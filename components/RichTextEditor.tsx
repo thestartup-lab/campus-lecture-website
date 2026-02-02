@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import ErrorBoundary from './ErrorBoundary'
 
 interface RichTextEditorProps {
@@ -23,6 +23,15 @@ const EditorCore = dynamic(() => import('./RichTextEditorCore'), {
 export default function RichTextEditor({ content, onChange, placeholder = '開始撰寫您的文章...' }: RichTextEditorProps) {
   const [useSimpleEditor, setUseSimpleEditor] = useState(false)
 
+  // 穩定的 onChange 函數
+  const handleChange = useCallback((newContent: string) => {
+    console.log('🔍 RichTextEditor handleChange 被調用:', {
+      contentLength: newContent.length,
+      contentPreview: newContent.substring(0, 50)
+    })
+    onChange(newContent)
+  }, [onChange])
+
   // 純文字模式
   if (useSimpleEditor) {
     return (
@@ -40,11 +49,15 @@ export default function RichTextEditor({ content, onChange, placeholder = '開�
         <textarea
           value={content.replace(/<[^>]*>/g, '')}
           onChange={(e) => {
+            const value = e.target.value
             console.log('🔍 純文字編輯器 onChange 觸發:', {
-              valueLength: e.target.value.length,
-              valuePreview: e.target.value.substring(0, 50)
+              valueLength: value.length,
+              valuePreview: value.substring(0, 50)
             })
-            onChange(e.target.value)
+            handleChange(value)
+          }}
+          onInput={(e) => {
+            console.log('🔍 純文字編輯器 onInput 觸發 (backup)')
           }}
           placeholder={placeholder}
           className="w-full min-h-[300px] p-4 resize-none focus:outline-none bg-white text-black"
@@ -71,7 +84,7 @@ export default function RichTextEditor({ content, onChange, placeholder = '開�
     >
       <EditorCore
         content={content}
-        onChange={onChange}
+        onChange={handleChange}
         placeholder={placeholder}
         onSwitchToSimple={() => setUseSimpleEditor(true)}
       />
