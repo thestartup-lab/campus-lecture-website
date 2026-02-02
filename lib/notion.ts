@@ -519,6 +519,89 @@ export async function getFeaturedPosts(limit: number = 3): Promise<{ success: bo
 }
 
 /**
+ * 將 HTML 轉換為 Notion blocks
+ */
+function htmlToNotionBlocks(html: string): Array<{
+  object: 'block'
+  type: string
+  [key: string]: unknown
+}> {
+  if (!html || html.trim() === '' || html === '<p></p>') {
+    return []
+  }
+
+  const blocks: Array<{
+    object: 'block'
+    type: string
+    [key: string]: unknown
+  }> = []
+
+  // 簡單的 HTML 解析（處理常見標籤）
+  const lines = html
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/h1>/gi, '\n')
+    .replace(/<\/h2>/gi, '\n')
+    .replace(/<\/h3>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+
+  for (const line of lines) {
+    // 移除 HTML 標籤，取得純文字
+    const text = line.replace(/<[^>]*>/g, '').trim()
+    if (!text) continue
+
+    // 判斷類型
+    if (line.startsWith('<h1')) {
+      blocks.push({
+        object: 'block',
+        type: 'heading_1',
+        heading_1: {
+          rich_text: [{ type: 'text', text: { content: text } }],
+        },
+      })
+    } else if (line.startsWith('<h2')) {
+      blocks.push({
+        object: 'block',
+        type: 'heading_2',
+        heading_2: {
+          rich_text: [{ type: 'text', text: { content: text } }],
+        },
+      })
+    } else if (line.startsWith('<h3')) {
+      blocks.push({
+        object: 'block',
+        type: 'heading_3',
+        heading_3: {
+          rich_text: [{ type: 'text', text: { content: text } }],
+        },
+      })
+    } else if (line.startsWith('<li')) {
+      blocks.push({
+        object: 'block',
+        type: 'bulleted_list_item',
+        bulleted_list_item: {
+          rich_text: [{ type: 'text', text: { content: text } }],
+        },
+      })
+    } else {
+      // 預設為段落
+      blocks.push({
+        object: 'block',
+        type: 'paragraph',
+        paragraph: {
+          rich_text: [{ type: 'text', text: { content: text } }],
+        },
+      })
+    }
+  }
+
+  return blocks
+}
+
+/**
  * 建立文章
  */
 export async function createPost(
@@ -533,6 +616,8 @@ export async function createPost(
     if (!dataSourceId) {
       throw new Error('無法取得文章資料來源 ID')
     }
+
+    console.log('📝 建立文章，內容長度:', data.content?.length || 0)
 
     // 建立基本屬性
     const properties: Record<string, unknown> = {
@@ -571,9 +656,33 @@ export async function createPost(
       properties: properties as any,
     })
 
+    const pageId = 'id' in response ? response.id : undefined
+
+    // 如果有內容，寫入頁面 body
+    if (pageId && data.content && data.content.trim()) {
+      console.log('📝 寫入文章內容到頁面 body...')
+      
+      const blocks = htmlToNotionBlocks(data.content)
+      console.log('📝 轉換後的 blocks 數量:', blocks.length)
+
+      if (blocks.length > 0) {
+        // Notion API 限制每次最多 100 個 blocks
+        const batchSize = 100
+        for (let i = 0; i < blocks.length; i += batchSize) {
+          const batch = blocks.slice(i, i + batchSize)
+          await notion.blocks.children.append({
+            block_id: pageId,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            children: batch as any,
+          })
+        }
+        console.log('📝 文章內容寫入成功')
+      }
+    }
+
     return {
       success: true,
-      pageId: 'id' in response ? response.id : undefined,
+      pageId,
     }
   } catch (error) {
     console.error('建立文章失敗:', error)
