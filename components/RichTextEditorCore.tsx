@@ -135,6 +135,7 @@ export default function RichTextEditorCore({ content, onChange, placeholder = 'é
     <div className="border-2 border-black">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 border-b-2 border-black bg-paper-dark">
+        <span className="text-xs text-green-600 font-bold mr-2">v2.0</span>
         <button
           type="button"
           onClick={onSwitchToSimple}
