@@ -42,12 +42,8 @@ export default function RichTextEditorCore({ content, onChange, placeholder = '�
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-blue-600 underline',
-        },
+      StarterKit.configure({
+        // 保留 StarterKit 的所有預設 extensions
       }),
       Image.configure({
         HTMLAttributes: {
