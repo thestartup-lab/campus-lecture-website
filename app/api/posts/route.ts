@@ -82,21 +82,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Debug: 檢查收到的資料
-    console.log('===== API 收到文章資料 =====')
-    console.log('標題:', body.title)
-    console.log('content 存在?', !!body.content)
-    console.log('content 類型:', typeof body.content)
-    console.log('content 長度:', body.content?.length || 0)
-    console.log('content 內容:', body.content ? body.content.substring(0, 200) : '(無)')
-    console.log('==============================')
-    
-    // 強制確保 content 不是 undefined
-    if (body.content === undefined) {
-      console.log('⚠️ content 是 undefined，設為空字符串')
-      body.content = ''
-    }
-
     const postData: NotionPost = {
       title: body.title,
       excerpt: body.excerpt || '',

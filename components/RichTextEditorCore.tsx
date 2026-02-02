@@ -2,6 +2,7 @@
 
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import { useEffect, useCallback, useRef } from 'react'
@@ -41,9 +42,12 @@ export default function RichTextEditorCore({ content, onChange, placeholder = '�
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        // StarterKit v3 已包含 Link，不需要額外添加
-        // 這裡保留所有預設 extensions
+      StarterKit,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-blue-600 underline',
+        },
       }),
       Image.configure({
         HTMLAttributes: {
@@ -56,26 +60,10 @@ export default function RichTextEditorCore({ content, onChange, placeholder = '�
     ],
     content,
     immediatelyRender: false,
-    // 🔧 修復：允許重新渲染以觸發 onUpdate
-    shouldRerenderOnTransaction: true,
+    shouldRerenderOnTransaction: false,
     onUpdate: ({ editor }) => {
       if (!isDestroying.current) {
-        const html = editor.getHTML()
-        console.log('🔍 編輯器 onUpdate 觸發:', {
-          htmlLength: html.length,
-          htmlPreview: html.substring(0, 100)
-        })
-        onChange(html)
-      }
-    },
-    // 🆕 添加 onBlur 回調作為備用
-    onBlur: ({ editor }) => {
-      if (!isDestroying.current) {
-        const html = editor.getHTML()
-        console.log('🔍 編輯器 onBlur 觸發 (失去焦點):', {
-          htmlLength: html.length
-        })
-        onChange(html)
+        onChange(editor.getHTML())
       }
     },
     editorProps: {
@@ -135,7 +123,6 @@ export default function RichTextEditorCore({ content, onChange, placeholder = '�
     <div className="border-2 border-black">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 border-b-2 border-black bg-paper-dark">
-        <span className="text-xs text-green-600 font-bold mr-2">v2.0</span>
         <button
           type="button"
           onClick={onSwitchToSimple}

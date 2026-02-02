@@ -26,16 +26,16 @@ export default function Navbar() {
   const displayName = profile?.display_name || profile?.full_name || user?.email?.split('@')[0] || '講師'
 
   return (
-    <nav className="bg-black border-b-2 sticky top-0 z-50" style={{ borderColor: '#FF6B00' }}>
+    <nav className="bg-paper border-b-2 border-black sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 text-black flex items-center justify-center transition-all" style={{ backgroundColor: '#FF6B00' }}>
+            <div className="w-10 h-10 bg-black text-paper flex items-center justify-center">
               <BookOpen className="w-5 h-5" strokeWidth={1.5} />
             </div>
-            <span className="hidden sm:block font-serif text-base font-bold tracking-tight whitespace-nowrap text-white">
-              全域影響力超業學院
+            <span className="hidden sm:block font-serif text-base font-bold tracking-tight whitespace-nowrap">
+              生命應該是這樣的
             </span>
           </Link>
 
@@ -46,8 +46,7 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-sm uppercase tracking-wider font-medium text-white hover:opacity-70 transition-opacity"
-                  style={{ '--hover-color': '#FF6B00' } as React.CSSProperties}
+                  className="text-sm uppercase tracking-wider font-medium text-black hover:opacity-60 transition-opacity"
                 >
                   {item.name}
                 </Link>
@@ -56,15 +55,15 @@ export default function Navbar() {
             
             {/* 登入狀態 */}
             {loading ? (
-              <div className="w-20 h-8 bg-white/10 animate-pulse" />
+              <div className="w-20 h-8 bg-black/5 animate-pulse" />
             ) : user ? (
               <div className="flex items-center gap-3">
                 {/* 用戶名稱 */}
-                <div className="flex items-center gap-2 px-3 py-1.5 border-2 text-white" style={{ borderColor: '#FF6B00' }} title={isAdmin ? '管理員' : '講師'}>
+                <div className="flex items-center gap-2 px-3 py-1.5 border-2 border-black" title={isAdmin ? '管理員' : '講師'}>
                   {isAdmin ? (
-                    <Shield className="w-4 h-4" style={{ color: '#FF6B00' }} strokeWidth={1.5} />
+                    <Shield className="w-4 h-4" strokeWidth={1.5} />
                   ) : (
-                    <User className="w-4 h-4" style={{ color: '#FF6B00' }} strokeWidth={1.5} />
+                    <User className="w-4 h-4" strokeWidth={1.5} />
                   )}
                   <span className="text-sm font-medium">{displayName}</span>
                 </div>
@@ -73,16 +72,10 @@ export default function Navbar() {
                 {isAdmin && (
                   <Link
                     href="/admin"
-                    className="relative group p-2 border-2 transition-colors hover:text-black"
-                    style={{ 
-                      borderColor: '#FF6B00',
-                      color: '#FF6B00'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FF6B00'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    className="relative group p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
                   >
                     <Shield className="w-4 h-4" strokeWidth={1.5} />
-                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 text-black text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ backgroundColor: '#FF6B00' }}>
+                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-paper text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                       管理後台
                     </span>
                   </Link>
@@ -91,16 +84,10 @@ export default function Navbar() {
                 {/* 講師後台 */}
                 <Link
                   href="/dashboard"
-                  className="relative group p-2 border-2 transition-colors hover:text-black"
-                  style={{ 
-                    borderColor: '#FF6B00',
-                    color: '#FF6B00'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FF6B00'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  className="relative group p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
                 >
                   <LayoutDashboard className="w-4 h-4" strokeWidth={1.5} />
-                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 text-black text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ backgroundColor: '#FF6B00' }}>
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-paper text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     講師後台
                   </span>
                 </Link>
@@ -108,16 +95,10 @@ export default function Navbar() {
                 {/* 登出 */}
                 <button
                   onClick={handleSignOut}
-                  className="relative group p-2 border-2 transition-colors hover:text-black"
-                  style={{ 
-                    borderColor: '#FF6B00',
-                    color: '#FF6B00'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FF6B00'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  className="relative group p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
                 >
                   <LogOut className="w-4 h-4" strokeWidth={1.5} />
-                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 text-black text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" style={{ backgroundColor: '#FF6B00' }}>
+                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-paper text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     登出
                   </span>
                 </button>
@@ -141,8 +122,7 @@ export default function Navbar() {
               user ? (
                 <Link
                   href={isAdmin ? "/admin" : "/dashboard"}
-                  className="p-2 border-2"
-                  style={{ borderColor: '#FF6B00', color: '#FF6B00' }}
+                  className="p-2 border-2 border-black"
                   title={isAdmin ? "管理後台" : "講師後台"}
                 >
                   {isAdmin ? (
@@ -152,7 +132,7 @@ export default function Navbar() {
                   )}
                 </Link>
               ) : (
-                <Link href="/login" className="p-2 border-2 text-black" style={{ borderColor: '#FF6B00', backgroundColor: '#FF6B00' }} title="登入">
+                <Link href="/login" className="p-2 border-2 border-black bg-black text-paper" title="登入">
                   <LogIn className="w-4 h-4" strokeWidth={1.5} />
                 </Link>
               )
@@ -160,10 +140,7 @@ export default function Navbar() {
             
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 border-2 transition-colors hover:text-black"
-              style={{ borderColor: '#FF6B00', color: '#FF6B00' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FF6B00'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              className="p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
               title={isOpen ? "關閉選單" : "開啟選單"}
             >
               {isOpen ? (
@@ -178,16 +155,13 @@ export default function Navbar() {
 
       {/* Mobile Navigation */}
       {isOpen && (
-        <div className="md:hidden border-t-2 bg-black" style={{ borderColor: '#FF6B00' }}>
+        <div className="md:hidden border-t-2 border-black bg-paper">
           <div className="px-6 py-4 space-y-2">
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="block px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 text-white transition-colors hover:text-black"
-                style={{ borderColor: '#FF6B00' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FF6B00'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                className="block px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 border-black hover:bg-black hover:text-paper transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 {item.name}
@@ -197,26 +171,23 @@ export default function Navbar() {
             {/* Mobile: 用戶資訊和登出 */}
             {user && (
               <>
-                <div className="my-4 h-0.5" style={{ backgroundColor: '#FF6B00' }} />
-                <div className="px-4 py-3 border-2 flex items-center gap-2 text-white" style={{ borderColor: '#FF6B00' }}>
+                <div className="my-4 h-0.5 bg-black" />
+                <div className="px-4 py-3 border-2 border-black flex items-center gap-2">
                   {isAdmin ? (
-                    <Shield className="w-4 h-4" style={{ color: '#FF6B00' }} strokeWidth={1.5} />
+                    <Shield className="w-4 h-4" strokeWidth={1.5} />
                   ) : (
-                    <User className="w-4 h-4" style={{ color: '#FF6B00' }} strokeWidth={1.5} />
+                    <User className="w-4 h-4" strokeWidth={1.5} />
                   )}
                   <span className="font-medium">{displayName}</span>
                   {isAdmin && (
-                    <span className="ml-auto text-xs uppercase tracking-wider" style={{ color: '#FF6B00' }}>Admin</span>
+                    <span className="ml-auto text-xs uppercase tracking-wider">Admin</span>
                   )}
                 </div>
                 
                 {isAdmin && (
                   <Link
                     href="/admin"
-                    className="flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 text-white transition-colors hover:text-black"
-                    style={{ borderColor: '#FF6B00' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FF6B00'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    className="flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 border-black hover:bg-black hover:text-paper transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
                     <Shield className="w-4 h-4" strokeWidth={1.5} />
@@ -226,10 +197,7 @@ export default function Navbar() {
                 
                 <Link
                   href="/dashboard"
-                  className="flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 text-white transition-colors hover:text-black"
-                  style={{ borderColor: '#FF6B00' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FF6B00'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  className="flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 border-black hover:bg-black hover:text-paper transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
                   <LayoutDashboard className="w-4 h-4" strokeWidth={1.5} />
@@ -238,10 +206,7 @@ export default function Navbar() {
                 
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 text-white transition-colors hover:text-black"
-                  style={{ borderColor: '#FF6B00' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FF6B00'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 border-black hover:bg-black hover:text-paper transition-colors"
                 >
                   <LogOut className="w-4 h-4" strokeWidth={1.5} />
                   登出

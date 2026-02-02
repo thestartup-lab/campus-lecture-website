@@ -26,26 +26,26 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "全域影響力超業學院 - 培育頂尖超業人才",
-    template: "%s | 全域影響力超業學院",
+    default: "生命應該是這樣的 - 讓教育更有溫度",
+    template: "%s | 生命應該是這樣的",
   },
-  description: "全域影響力超業學院致力於連結專業講師與學員，提供高品質的超業培訓課程。我們相信，每一場課程都能開啟成功之門，創造無限可能。",
-  keywords: ["超業", "銷售", "業務", "講師", "培訓", "課程", "教育", "全域影響力"],
-  authors: [{ name: "全域影響力超業學院" }],
-  creator: "全域影響力超業學院",
+  description: "連結專業講師與校園，為學生帶來啟發性的學習體驗。我們相信，每一場講座都能點燃學習的熱情，開啟未來的可能。",
+  keywords: ["生命教育", "教育", "講師", "學生", "學校", "演講", "教育講座", "校園活動"],
+  authors: [{ name: "生命應該是這樣的" }],
+  creator: "生命應該是這樣的",
   metadataBase: new URL("https://campus-lecture-website.vercel.app"),
   openGraph: {
-    title: "全域影響力超業學院 - 培育頂尖超業人才",
-    description: "全域影響力超業學院致力於連結專業講師與學員，提供高品質的超業培訓課程。",
+    title: "生命應該是這樣的 - 讓教育更有溫度",
+    description: "連結專業講師與校園，為學生帶來啟發性的學習體驗。",
     url: "https://campus-lecture-website.vercel.app",
-    siteName: "全域影響力超業學院",
+    siteName: "生命應該是這樣的",
     locale: "zh_TW",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "全域影響力超業學院 - 培育頂尖超業人才",
-    description: "全域影響力超業學院致力於連結專業講師與學員，提供高品質的超業培訓課程。",
+    title: "生命應該是這樣的 - 讓教育更有溫度",
+    description: "連結專業講師與校園，為學生帶來啟發性的學習體驗。",
   },
   robots: {
     index: true,
@@ -91,7 +91,7 @@ export default function RootLayout({
         `}</Script>
       </head>
       <body
-        className={`${playfair.variable} ${inter.variable} font-sans antialiased bg-black text-white`}
+        className={`${playfair.variable} ${inter.variable} font-sans antialiased bg-paper text-black`}
       >
         <Providers>
           <Navbar />

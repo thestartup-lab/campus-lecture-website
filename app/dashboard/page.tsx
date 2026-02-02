@@ -1215,23 +1215,6 @@ export default function DashboardPage() {
         }
       } else {
         // 新增文章
-        
-        // 🔧 強制失去焦點，確保編輯器內容被保存
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur()
-        }
-        
-        // 等待 100ms 讓 onChange 有時間觸發
-        await new Promise(resolve => setTimeout(resolve, 100))
-        
-        // 🔍 DEBUG: 檢查要發送的資料
-        console.log('===== 前端準備發送的資料 =====')
-        console.log('標題:', articleForm.title)
-        console.log('content 存在?', !!articleForm.content)
-        console.log('content 長度:', articleForm.content?.length || 0)
-        console.log('content 內容:', articleForm.content)
-        console.log('================================')
-        
         const response = await fetch('/api/posts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2981,18 +2964,7 @@ export default function DashboardPage() {
                 </label>
                 <RichTextEditor
                   content={articleForm.content}
-                  onChange={(content) => {
-                    console.log('🔍 Dashboard 收到 onChange:', {
-                      contentLength: content.length,
-                      contentPreview: content.substring(0, 50)
-                    })
-                    setArticleForm(prev => {
-                      console.log('🔍 更新前 articleForm.content:', prev.content?.length || 0)
-                      const newForm = { ...prev, content }
-                      console.log('🔍 更新後 articleForm.content:', newForm.content?.length || 0)
-                      return newForm
-                    })
-                  }}
+                  onChange={(content) => setArticleForm(prev => ({ ...prev, content }))}
                   placeholder="開始撰寫您的文章..."
                 />
                 <p className="text-xs text-ink-muted mt-2">
