@@ -39,7 +39,7 @@ async function testCreatePost() {
   
   try {
     // 使用線上 API（請替換為您的實際網址）
-    const response = await fetch('https://website-sigma-one-97.vercel.app/api/posts', {
+    const response = await fetch('https://pm.cjlead.com.tw/api/posts', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

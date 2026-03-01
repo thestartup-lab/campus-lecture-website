@@ -118,6 +118,17 @@ export default function AdminPage() {
   const [subscriberCount, setSubscriberCount] = useState<number | null>(null)
   const [broadcastResult, setBroadcastResult] = useState<{ sentCount: number; failCount: number } | null>(null)
 
+  // 訂閱者管理
+  const [subscribers, setSubscribers] = useState<{ id: string; email: string; created_at: string }[]>([])
+  const [loadingSubscribers, setLoadingSubscribers] = useState(false)
+  const [manualEmail, setManualEmail] = useState('')
+  const [addingEmail, setAddingEmail] = useState(false)
+  const [csvEmails, setCsvEmails] = useState<string[]>([])
+  const [csvFilename, setCsvFilename] = useState('')
+  const [importingCsv, setImportingCsv] = useState(false)
+  const [importResult, setImportResult] = useState<{ inserted: number; skipped: number } | null>(null)
+  const [deletingSubscriberId, setDeletingSubscriberId] = useState<string | null>(null)
+
   // 設定角色函數
   const setUserRole = async (userId: string, newRole: 'admin' | 'instructor', userName: string) => {
     const action = newRole === 'admin' ? '設為管理員' : '取消管理員'
@@ -235,15 +246,113 @@ export default function AdminPage() {
     setLoadingData(false)
   }
 
+  const fetchSubscribers = async () => {
+    setLoadingSubscribers(true)
+    try {
+      const res = await fetch('/api/subscribers')
+      const data = await res.json()
+      if (data.success) {
+        setSubscribers(data.subscribers)
+        setSubscriberCount(data.count)
+      }
+    } catch {}
+    setLoadingSubscribers(false)
+  }
+
   useEffect(() => {
     if (user && isAdmin) {
       fetchInstructors()
-      fetch('/api/subscribers')
-        .then(r => r.json())
-        .then(d => { if (d.success) setSubscriberCount(d.count) })
-        .catch(() => {})
+      fetchSubscribers()
     }
   }, [user, isAdmin])
+
+  // 手動新增單筆訂閱者
+  const handleAddEmail = async () => {
+    if (!manualEmail.trim()) return
+    setAddingEmail(true)
+    try {
+      const res = await fetch('/api/subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emails: [manualEmail.trim()] }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        if (data.inserted > 0) {
+          alert('已新增訂閱者')
+          setManualEmail('')
+          fetchSubscribers()
+        } else {
+          alert('此 Email 已在訂閱名單中')
+        }
+      } else {
+        alert(`新增失敗：${data.error}`)
+      }
+    } catch {
+      alert('新增時發生錯誤')
+    }
+    setAddingEmail(false)
+  }
+
+  // 解析 CSV 檔案
+  const handleCsvFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setCsvFilename(file.name)
+    setImportResult(null)
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string
+      const emailRegex = /[^\s@,;"'<>]+@[^\s@,;"'<>]+\.[^\s@,;"'<>]+/g
+      const found = Array.from(new Set(text.match(emailRegex) || []))
+      setCsvEmails(found)
+    }
+    reader.readAsText(file)
+  }
+
+  // 匯入 CSV 訂閱者
+  const handleCsvImport = async () => {
+    if (!csvEmails.length) return
+    setImportingCsv(true)
+    setImportResult(null)
+    try {
+      const res = await fetch('/api/subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emails: csvEmails }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setImportResult({ inserted: data.inserted, skipped: data.skipped })
+        setCsvEmails([])
+        setCsvFilename('')
+        fetchSubscribers()
+      } else {
+        alert(`匯入失敗：${data.error}`)
+      }
+    } catch {
+      alert('匯入時發生錯誤')
+    }
+    setImportingCsv(false)
+  }
+
+  // 刪除訂閱者
+  const handleDeleteSubscriber = async (id: string, email: string) => {
+    if (!confirm(`確定要移除「${email}」的訂閱嗎？`)) return
+    setDeletingSubscriberId(id)
+    try {
+      const res = await fetch(`/api/subscribers?id=${id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data.success) {
+        fetchSubscribers()
+      } else {
+        alert(`刪除失敗：${data.error}`)
+      }
+    } catch {
+      alert('刪除時發生錯誤')
+    }
+    setDeletingSubscriberId(null)
+  }
 
   // 電子報群發
   const handleBroadcast = async () => {
@@ -904,6 +1013,118 @@ export default function AdminPage() {
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* 訂閱者管理 */}
+      <div className="card-editorial overflow-hidden mt-8">
+        <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between">
+          <h2 className="font-bold text-xl tracking-tight flex items-center gap-2">
+            📋 訂閱者管理
+          </h2>
+          <span className="text-sm text-gray-500">
+            共 {subscriberCount ?? '...'} 位訂閱者
+          </span>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* 手動新增 */}
+          <div>
+            <h3 className="font-semibold mb-2">手動新增訂閱者</h3>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                className="flex-1 border-2 border-black px-3 py-2 text-sm focus:outline-none"
+                placeholder="輸入 Email"
+                value={manualEmail}
+                onChange={(e) => setManualEmail(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddEmail()}
+              />
+              <button
+                onClick={handleAddEmail}
+                disabled={addingEmail || !manualEmail.trim()}
+                className="btn-editorial px-4 py-2 text-sm disabled:opacity-50"
+              >
+                {addingEmail ? '新增中...' : '新增'}
+              </button>
+            </div>
+          </div>
+
+          {/* CSV 匯入 */}
+          <div>
+            <h3 className="font-semibold mb-2">CSV 批次匯入</h3>
+            <p className="text-xs text-gray-500 mb-2">支援任意 CSV 格式，自動偵測 Email 欄位，無需指定欄位名稱</p>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="btn-editorial px-4 py-2 text-sm cursor-pointer">
+                選擇 CSV 檔案
+                <input type="file" accept=".csv,.txt" className="hidden" onChange={handleCsvFile} />
+              </label>
+              {csvFilename && (
+                <span className="text-sm text-gray-600">{csvFilename}</span>
+              )}
+            </div>
+            {csvEmails.length > 0 && (
+              <div className="bg-gray-50 border border-gray-200 rounded p-3 mb-2">
+                <p className="text-sm font-medium mb-1">偵測到 {csvEmails.length} 個 Email：</p>
+                <p className="text-xs text-gray-500 break-all">{csvEmails.slice(0, 5).join(', ')}{csvEmails.length > 5 ? ` ... 等共 ${csvEmails.length} 個` : ''}</p>
+                <button
+                  onClick={handleCsvImport}
+                  disabled={importingCsv}
+                  className="btn-editorial px-4 py-2 text-sm mt-3 disabled:opacity-50"
+                >
+                  {importingCsv ? '匯入中...' : `確認匯入 ${csvEmails.length} 個 Email`}
+                </button>
+              </div>
+            )}
+            {importResult && (
+              <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2">
+                ✅ 匯入完成：新增 {importResult.inserted} 筆，略過重複 {importResult.skipped} 筆
+              </div>
+            )}
+          </div>
+
+          {/* 訂閱者列表 */}
+          <div>
+            <h3 className="font-semibold mb-2">訂閱者列表</h3>
+            {loadingSubscribers ? (
+              <p className="text-sm text-gray-500">載入中...</p>
+            ) : subscribers.length === 0 ? (
+              <p className="text-sm text-gray-500">尚無訂閱者</p>
+            ) : (
+              <div className="border-2 border-black overflow-hidden">
+                <div className="overflow-y-auto max-h-72">
+                  <table className="w-full text-sm">
+                    <thead className="bg-black text-white">
+                      <tr>
+                        <th className="text-left px-4 py-2 font-medium">Email</th>
+                        <th className="text-left px-4 py-2 font-medium">訂閱日期</th>
+                        <th className="px-4 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subscribers.map((sub, idx) => (
+                        <tr key={sub.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                          <td className="px-4 py-2">{sub.email}</td>
+                          <td className="px-4 py-2 text-gray-500">
+                            {new Date(sub.created_at).toLocaleDateString('zh-TW')}
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            <button
+                              onClick={() => handleDeleteSubscriber(sub.id, sub.email)}
+                              disabled={deletingSubscriberId === sub.id}
+                              className="text-red-500 hover:text-red-700 text-xs disabled:opacity-40"
+                            >
+                              {deletingSubscriberId === sub.id ? '刪除中...' : '移除'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
