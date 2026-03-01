@@ -77,6 +77,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 儲存寄送紀錄
+    await supabaseAdmin.from('newsletter_history').insert({
+      subject,
+      html_content: htmlContent,
+      recipient_count: subscribers.length,
+      sent_count: sentCount,
+      fail_count: failCount,
+    })
+
     return NextResponse.json({
       success: true,
       sentCount,

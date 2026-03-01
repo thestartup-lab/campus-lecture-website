@@ -119,6 +119,17 @@ export default function AdminPage() {
   const [broadcastResult, setBroadcastResult] = useState<{ sentCount: number; failCount: number } | null>(null)
   const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set())
 
+  // 電子報寄送歷史
+  const [newsletterHistory, setNewsletterHistory] = useState<{
+    id: string
+    subject: string
+    recipient_count: number
+    sent_count: number
+    fail_count: number
+    sent_at: string
+  }[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
+
   // 訂閱者管理
   const [subscribers, setSubscribers] = useState<{ id: string; email: string; created_at: string }[]>([])
   const [loadingSubscribers, setLoadingSubscribers] = useState(false)
@@ -247,6 +258,16 @@ export default function AdminPage() {
     setLoadingData(false)
   }
 
+  const fetchNewsletterHistory = async () => {
+    setLoadingHistory(true)
+    try {
+      const res = await fetch('/api/newsletter/history')
+      const data = await res.json()
+      if (data.success) setNewsletterHistory(data.history)
+    } catch {}
+    setLoadingHistory(false)
+  }
+
   const fetchSubscribers = async () => {
     setLoadingSubscribers(true)
     try {
@@ -266,6 +287,7 @@ export default function AdminPage() {
     if (user && isAdmin) {
       fetchInstructors()
       fetchSubscribers()
+      fetchNewsletterHistory()
     }
   }, [user, isAdmin])
 
@@ -376,6 +398,7 @@ export default function AdminPage() {
       const data = await res.json()
       if (data.success) {
         setBroadcastResult({ sentCount: data.sentCount, failCount: data.failCount })
+        fetchNewsletterHistory()
         if (data.failCount === 0) {
           alert(`成功寄出 ${data.sentCount} 封！`)
         } else {
@@ -1279,6 +1302,56 @@ export default function AdminPage() {
               <span>{broadcastLoading ? '寄送中...' : `發送給 ${selectedRecipients.size} 人`}</span>
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* 電子報寄送歷史 */}
+      <div className="card-editorial overflow-hidden mt-8">
+        <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between">
+          <h2 className="font-bold text-xl tracking-tight">寄送紀錄</h2>
+          <button onClick={fetchNewsletterHistory} className="text-xs underline text-ink-muted hover:text-black">
+            重新整理
+          </button>
+        </div>
+        <div className="p-6">
+          {loadingHistory ? (
+            <p className="text-sm text-gray-500">載入中...</p>
+          ) : newsletterHistory.length === 0 ? (
+            <p className="text-sm text-gray-500">尚無寄送紀錄</p>
+          ) : (
+            <div className="border-2 border-black overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-black text-white">
+                  <tr>
+                    <th className="text-left px-4 py-2 font-medium">主旨</th>
+                    <th className="text-center px-4 py-2 font-medium">收件人</th>
+                    <th className="text-center px-4 py-2 font-medium">成功</th>
+                    <th className="text-center px-4 py-2 font-medium">失敗</th>
+                    <th className="text-right px-4 py-2 font-medium">寄送時間</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {newsletterHistory.map((record, idx) => (
+                    <tr key={record.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="px-4 py-2 font-medium">{record.subject}</td>
+                      <td className="px-4 py-2 text-center text-gray-600">{record.recipient_count}</td>
+                      <td className="px-4 py-2 text-center text-green-700 font-medium">{record.sent_count}</td>
+                      <td className="px-4 py-2 text-center">
+                        {record.fail_count > 0 ? (
+                          <span className="text-red-600 font-medium">{record.fail_count}</span>
+                        ) : (
+                          <span className="text-gray-400">0</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2 text-right text-gray-500 text-xs">
+                        {new Date(record.sent_at).toLocaleString('zh-TW')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 
