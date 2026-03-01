@@ -110,6 +110,14 @@ export default function AdminPage() {
   const [newPassword, setNewPassword] = useState('')
   const [resettingPassword, setResettingPassword] = useState(false)
 
+  // 電子報群發
+  const [newsletterSubject, setNewsletterSubject] = useState('')
+  const [newsletterHtml, setNewsletterHtml] = useState('')
+  const [newsletterPreview, setNewsletterPreview] = useState(false)
+  const [broadcastLoading, setBroadcastLoading] = useState(false)
+  const [subscriberCount, setSubscriberCount] = useState<number | null>(null)
+  const [broadcastResult, setBroadcastResult] = useState<{ sentCount: number; failCount: number } | null>(null)
+
   // 設定角色函數
   const setUserRole = async (userId: string, newRole: 'admin' | 'instructor', userName: string) => {
     const action = newRole === 'admin' ? '設為管理員' : '取消管理員'
@@ -230,8 +238,44 @@ export default function AdminPage() {
   useEffect(() => {
     if (user && isAdmin) {
       fetchInstructors()
+      fetch('/api/subscribers')
+        .then(r => r.json())
+        .then(d => { if (d.success) setSubscriberCount(d.count) })
+        .catch(() => {})
     }
   }, [user, isAdmin])
+
+  // 電子報群發
+  const handleBroadcast = async () => {
+    if (!newsletterSubject.trim()) { alert('請填寫主旨'); return }
+    if (!newsletterHtml.trim()) { alert('請填寫郵件內容'); return }
+    if (!confirm(`確定要發送給所有 ${subscriberCount ?? ''} 位訂閱者嗎？`)) return
+
+    setBroadcastLoading(true)
+    setBroadcastResult(null)
+    try {
+      const res = await fetch('/api/newsletter/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: newsletterSubject, htmlContent: newsletterHtml }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setBroadcastResult({ sentCount: data.sentCount, failCount: data.failCount })
+        if (data.failCount === 0) {
+          alert(`成功寄出 ${data.sentCount} 封！`)
+        } else {
+          alert(`寄出 ${data.sentCount} 封，失敗 ${data.failCount} 封`)
+        }
+      } else {
+        alert(`發送失敗：${data.error}`)
+      }
+    } catch {
+      alert('發送時發生錯誤')
+    } finally {
+      setBroadcastLoading(false)
+    }
+  }
 
   // 審核通過
   const approveInstructor = async (instructorId: string) => {
@@ -860,6 +904,94 @@ export default function AdminPage() {
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* 電子報群發 */}
+      <div className="card-editorial overflow-hidden mt-8">
+        <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between">
+          <div>
+            <h2 className="font-serif text-lg font-bold text-black flex items-center gap-2">
+              <Mail className="w-5 h-5" strokeWidth={1.5} />
+              電子報群發
+            </h2>
+            <p className="text-sm text-ink-muted">
+              寄送給全部訂閱者
+              {subscriberCount !== null && (
+                <span className="ml-1 font-medium text-black">（{subscriberCount} 人）</span>
+              )}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setNewsletterPreview(false)}
+              className={`px-3 py-1.5 text-xs font-medium border-2 border-black transition-colors ${!newsletterPreview ? 'bg-black text-paper' : 'bg-paper text-black hover:bg-paper-dark'}`}
+            >
+              編輯
+            </button>
+            <button
+              onClick={() => setNewsletterPreview(true)}
+              className={`px-3 py-1.5 text-xs font-medium border-2 border-black transition-colors ${newsletterPreview ? 'bg-black text-paper' : 'bg-paper text-black hover:bg-paper-dark'}`}
+            >
+              預覽
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">主旨</label>
+            <input
+              type="text"
+              value={newsletterSubject}
+              onChange={(e) => setNewsletterSubject(e.target.value)}
+              placeholder="請輸入電子報主旨"
+              className="input-editorial w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">
+              郵件內容（HTML）
+            </label>
+            {newsletterPreview ? (
+              <div
+                className="border-2 border-black bg-white min-h-[320px] p-4 overflow-auto"
+                dangerouslySetInnerHTML={{ __html: newsletterHtml || '<p style="color:#888;text-align:center;padding:40px">（尚無內容）</p>' }}
+              />
+            ) : (
+              <textarea
+                value={newsletterHtml}
+                onChange={(e) => setNewsletterHtml(e.target.value)}
+                placeholder={'<h1>標題</h1>\n<p>親愛的訂閱者，您好！...</p>'}
+                rows={14}
+                className="input-editorial w-full font-mono text-xs resize-y"
+              />
+            )}
+          </div>
+
+          {broadcastResult && (
+            <div className={`p-3 border-2 text-sm ${broadcastResult.failCount === 0 ? 'border-green-600 bg-green-50 text-green-800' : 'border-amber-500 bg-amber-50 text-amber-800'}`}>
+              成功寄出 {broadcastResult.sentCount} 封
+              {broadcastResult.failCount > 0 && `，失敗 ${broadcastResult.failCount} 封`}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-2 border-t-2 border-black">
+            <p className="text-xs text-ink-muted">寄件人：send@cjlead.com.tw</p>
+            <button
+              onClick={handleBroadcast}
+              disabled={broadcastLoading || !newsletterSubject.trim() || !newsletterHtml.trim()}
+              className="btn-editorial disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {broadcastLoading ? (
+                <RefreshCw className="w-4 h-4 animate-spin" strokeWidth={1.5} />
+              ) : (
+                <Mail className="w-4 h-4" strokeWidth={1.5} />
+              )}
+              <span>{broadcastLoading ? '寄送中...' : '發送電子報'}</span>
+            </button>
+          </div>
         </div>
       </div>
 

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     // 發送歡迎信
     const { data, error } = await resend.emails.send({
-      from: '生命應該是這樣的 <onboarding@resend.dev>', // 使用 Resend 預設寄件者，正式上線請改成您的網域
+      from: '生命應該是這樣的 <send@cjlead.com.tw>',
       to: email,
       subject: '🎉 歡迎訂閱生命應該是這樣的電子報！',
       html: `
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td align="center">
-                            <a href="https://your-website.com" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold;">
+                            <a href="https://pm.cjlead.com.tw" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: bold;">
                               探索更多內容 →
                             </a>
                           </td>
