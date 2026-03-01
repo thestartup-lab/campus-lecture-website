@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
       .from('newsletter_history')
-      .select('id, subject, recipient_count, sent_count, fail_count, sent_at')
+      .select('id, subject, html_content, recipient_count, sent_count, fail_count, sent_at')
       .order('sent_at', { ascending: false })
       .limit(50)
 

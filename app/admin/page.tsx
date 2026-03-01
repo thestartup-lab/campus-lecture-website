@@ -123,12 +123,18 @@ export default function AdminPage() {
   const [newsletterHistory, setNewsletterHistory] = useState<{
     id: string
     subject: string
+    html_content: string
     recipient_count: number
     sent_count: number
     fail_count: number
     sent_at: string
   }[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
+  const [previewHistoryItem, setPreviewHistoryItem] = useState<{
+    subject: string
+    html_content: string
+    sent_at: string
+  } | null>(null)
 
   // 訂閱者管理
   const [subscribers, setSubscribers] = useState<{ id: string; email: string; created_at: string }[]>([])
@@ -1328,6 +1334,7 @@ export default function AdminPage() {
                     <th className="text-center px-4 py-2 font-medium">成功</th>
                     <th className="text-center px-4 py-2 font-medium">失敗</th>
                     <th className="text-right px-4 py-2 font-medium">寄送時間</th>
+                    <th className="px-4 py-2"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1346,6 +1353,14 @@ export default function AdminPage() {
                       <td className="px-4 py-2 text-right text-gray-500 text-xs">
                         {new Date(record.sent_at).toLocaleString('zh-TW')}
                       </td>
+                      <td className="px-4 py-2 text-right">
+                        <button
+                          onClick={() => setPreviewHistoryItem({ subject: record.subject, html_content: record.html_content, sent_at: record.sent_at })}
+                          className="text-xs underline text-black hover:opacity-60"
+                        >
+                          查看內容
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1354,6 +1369,32 @@ export default function AdminPage() {
           )}
         </div>
       </div>
+
+      {/* 電子報歷史預覽 Modal */}
+      {previewHistoryItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div className="bg-paper border-2 border-black shadow-hard max-w-3xl w-full max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 border-b-2 border-black flex items-center justify-between sticky top-0 bg-paper">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-black">{previewHistoryItem.subject}</h3>
+                <p className="text-xs text-ink-muted mt-0.5">
+                  寄送時間：{new Date(previewHistoryItem.sent_at).toLocaleString('zh-TW')}
+                </p>
+              </div>
+              <button
+                onClick={() => setPreviewHistoryItem(null)}
+                className="p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <div
+              className="flex-1 overflow-y-auto p-6 bg-white"
+              dangerouslySetInnerHTML={{ __html: previewHistoryItem.html_content }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* 詳情 Modal */}
       {selectedInstructor && (
