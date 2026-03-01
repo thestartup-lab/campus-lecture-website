@@ -14,7 +14,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { subject, htmlContent } = body as { subject: string; htmlContent: string }
+    const { subject, htmlContent, emails } = body as {
+      subject: string
+      htmlContent: string
+      emails?: string[] // 若有傳入，只寄給指定 email；否則寄給全部訂閱者
+    }
 
     if (!subject?.trim()) {
       return NextResponse.json({ success: false, error: '請填寫主旨' }, { status: 400 })
@@ -23,13 +27,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: '請填寫郵件內容' }, { status: 400 })
     }
 
-    // 撈所有訂閱者
-    const { data: subscribers, error: dbError } = await supabaseAdmin
-      .from('newsletter_subscribers')
-      .select('email')
+    let subscribers: { email: string }[]
 
-    if (dbError) {
-      return NextResponse.json({ success: false, error: dbError.message }, { status: 500 })
+    if (emails && emails.length > 0) {
+      // 使用前端傳入的指定名單
+      subscribers = emails.map((e) => ({ email: e }))
+    } else {
+      // 撈全部訂閱者
+      const { data, error: dbError } = await supabaseAdmin
+        .from('newsletter_subscribers')
+        .select('email')
+
+      if (dbError) {
+        return NextResponse.json({ success: false, error: dbError.message }, { status: 500 })
+      }
+      subscribers = data ?? []
     }
 
     if (!subscribers || subscribers.length === 0) {

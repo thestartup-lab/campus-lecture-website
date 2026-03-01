@@ -117,6 +117,7 @@ export default function AdminPage() {
   const [broadcastLoading, setBroadcastLoading] = useState(false)
   const [subscriberCount, setSubscriberCount] = useState<number | null>(null)
   const [broadcastResult, setBroadcastResult] = useState<{ sentCount: number; failCount: number } | null>(null)
+  const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set())
 
   // 訂閱者管理
   const [subscribers, setSubscribers] = useState<{ id: string; email: string; created_at: string }[]>([])
@@ -254,6 +255,8 @@ export default function AdminPage() {
       if (data.success) {
         setSubscribers(data.subscribers)
         setSubscriberCount(data.count)
+        // 預設全選
+        setSelectedRecipients(new Set(data.subscribers.map((s: { email: string }) => s.email)))
       }
     } catch {}
     setLoadingSubscribers(false)
@@ -358,7 +361,9 @@ export default function AdminPage() {
   const handleBroadcast = async () => {
     if (!newsletterSubject.trim()) { alert('請填寫主旨'); return }
     if (!newsletterHtml.trim()) { alert('請填寫郵件內容'); return }
-    if (!confirm(`確定要發送給所有 ${subscriberCount ?? ''} 位訂閱者嗎？`)) return
+    const recipientList = Array.from(selectedRecipients)
+    if (recipientList.length === 0) { alert('請至少選取一位收件人'); return }
+    if (!confirm(`確定要發送給已選取的 ${recipientList.length} 位訂閱者嗎？`)) return
 
     setBroadcastLoading(true)
     setBroadcastResult(null)
@@ -366,7 +371,7 @@ export default function AdminPage() {
       const res = await fetch('/api/newsletter/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject: newsletterSubject, htmlContent: newsletterHtml }),
+        body: JSON.stringify({ subject: newsletterSubject, htmlContent: newsletterHtml, emails: recipientList }),
       })
       const data = await res.json()
       if (data.success) {
@@ -1191,6 +1196,67 @@ export default function AdminPage() {
             )}
           </div>
 
+          {/* 收件人勾選 */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium uppercase tracking-wider text-black">
+                收件人（已選 {selectedRecipients.size} / {subscribers.length} 人）
+              </label>
+              <div className="flex gap-2 text-xs">
+                <button
+                  onClick={() => setSelectedRecipients(new Set(subscribers.map(s => s.email)))}
+                  className="underline text-black hover:opacity-70"
+                >
+                  全選
+                </button>
+                <span className="text-ink-muted">|</span>
+                <button
+                  onClick={() => setSelectedRecipients(new Set())}
+                  className="underline text-black hover:opacity-70"
+                >
+                  取消全選
+                </button>
+              </div>
+            </div>
+            {subscribers.length === 0 ? (
+              <p className="text-sm text-ink-muted">尚無訂閱者，請先在上方「訂閱者管理」新增</p>
+            ) : (
+              <div className="border-2 border-black overflow-hidden max-h-48 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {subscribers.map((sub, idx) => (
+                      <tr
+                        key={sub.id}
+                        className={`cursor-pointer hover:bg-gray-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                        onClick={() => {
+                          setSelectedRecipients(prev => {
+                            const next = new Set(prev)
+                            if (next.has(sub.email)) next.delete(sub.email)
+                            else next.add(sub.email)
+                            return next
+                          })
+                        }}
+                      >
+                        <td className="px-3 py-2 w-8">
+                          <input
+                            type="checkbox"
+                            readOnly
+                            checked={selectedRecipients.has(sub.email)}
+                            className="cursor-pointer"
+                          />
+                        </td>
+                        <td className="px-3 py-2">{sub.email}</td>
+                        <td className="px-3 py-2 text-right text-xs text-gray-400">
+                          {new Date(sub.created_at).toLocaleDateString('zh-TW')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
           {broadcastResult && (
             <div className={`p-3 border-2 text-sm ${broadcastResult.failCount === 0 ? 'border-green-600 bg-green-50 text-green-800' : 'border-amber-500 bg-amber-50 text-amber-800'}`}>
               成功寄出 {broadcastResult.sentCount} 封
@@ -1202,7 +1268,7 @@ export default function AdminPage() {
             <p className="text-xs text-ink-muted">寄件人：send@cjlead.com.tw</p>
             <button
               onClick={handleBroadcast}
-              disabled={broadcastLoading || !newsletterSubject.trim() || !newsletterHtml.trim()}
+              disabled={broadcastLoading || !newsletterSubject.trim() || !newsletterHtml.trim() || selectedRecipients.size === 0}
               className="btn-editorial disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {broadcastLoading ? (
@@ -1210,7 +1276,7 @@ export default function AdminPage() {
               ) : (
                 <Mail className="w-4 h-4" strokeWidth={1.5} />
               )}
-              <span>{broadcastLoading ? '寄送中...' : '發送電子報'}</span>
+              <span>{broadcastLoading ? '寄送中...' : `發送給 ${selectedRecipients.size} 人`}</span>
             </button>
           </div>
         </div>
