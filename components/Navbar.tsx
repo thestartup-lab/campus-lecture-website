@@ -87,16 +87,18 @@ export default function Navbar() {
                   </Link>
                 )}
                 
-                {/* 講師後台 */}
-                <Link
-                  href="/dashboard"
-                  className="relative group p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
-                >
-                  <LayoutDashboard className="w-4 h-4" strokeWidth={1.5} />
-                  <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-paper text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                    講師後台
-                  </span>
-                </Link>
+                {/* 講師後台 - 管理員已有管理後台，不需重複顯示 */}
+                {!isAdmin && (
+                  <Link
+                    href="/dashboard"
+                    className="relative group p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
+                  >
+                    <LayoutDashboard className="w-4 h-4" strokeWidth={1.5} />
+                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-paper text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      講師後台
+                    </span>
+                  </Link>
+                )}
                 
                 {/* 登出 */}
                 <button
@@ -209,14 +211,16 @@ export default function Navbar() {
                   </Link>
                 )}
                 
-                <Link
-                  href="/dashboard"
-                  className="flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 border-black hover:bg-black hover:text-paper transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <LayoutDashboard className="w-4 h-4" strokeWidth={1.5} />
-                  講師後台
-                </Link>
+                {!isAdmin && (
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 border-black hover:bg-black hover:text-paper transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <LayoutDashboard className="w-4 h-4" strokeWidth={1.5} />
+                    講師後台
+                  </Link>
+                )}
                 
                 <button
                   onClick={handleSignOut}
