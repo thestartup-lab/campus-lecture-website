@@ -68,9 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const [initialLoadDone, setInitialLoadDone] = useState(false)
 
-  // 用 ref 追蹤最新 profile，避免 onAuthStateChange 閉包讀到舊值
+  // 追蹤最新 profile 供 onAuthStateChange 閉包使用
   const profileRef = useRef<Profile | null>(null)
   useEffect(() => {
     profileRef.current = profile
@@ -112,60 +111,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    // 從快取預先載入 profile，讓頁面不用等網路就能判斷權限
     const cachedProfile = getCachedProfile()
     if (cachedProfile) {
       setProfile(cachedProfile)
       profileRef.current = cachedProfile
-      setLoading(false)
-    }
-    setInitialLoadDone(true)
-  }, [])
-
-  useEffect(() => {
-    if (!initialLoadDone) return
-
-    const getSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        setSession(session)
-        setUser(session?.user ?? null)
-
-        if (session?.user) {
-          const fetchedProfile = await fetchProfile(session.user.id)
-          setProfile(fetchedProfile)
-          profileRef.current = fetchedProfile
-          setCachedProfile(fetchedProfile)
-        } else {
-          setProfile(null)
-          profileRef.current = null
-          setCachedProfile(null)
-        }
-      } catch {
-        console.warn('獲取 session 時發生錯誤')
-        setUser(null)
-        setProfile(null)
-        profileRef.current = null
-        setSession(null)
-        setCachedProfile(null)
-      } finally {
-        setLoading(false)
-      }
     }
 
-    getSession()
-
-    const timeout = setTimeout(() => {
-      setLoading(false)
-    }, 3000)
-
+    // 只使用 onAuthStateChange 作為唯一的 auth 狀態來源
+    // Supabase 在掛載後會立刻觸發 INITIAL_SESSION，帶入當前 session
+    // 避免同時跑 getSession() + onAuthStateChange 造成 race condition
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
 
         if (session?.user) {
-          // 若是登入事件且已有相同 userId 的 profile（由 signIn 設定），
-          // 跳過重複 fetch 避免 AbortError 覆蓋正確的 profile
+          // SIGNED_IN 且 signIn() 已設好 profile 時，跳過重複 fetch
+          // 防止 onAuthStateChange 用失敗的 fetch 覆蓋剛設好的 admin profile
           if (event === 'SIGNED_IN' && profileRef.current?.id === session.user.id) {
             setLoading(false)
             return
@@ -184,11 +147,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     )
 
+    // 保底：3 秒後強制結束 loading，防止卡住
+    const timeout = setTimeout(() => setLoading(false), 3000)
+
     return () => {
       subscription.unsubscribe()
       clearTimeout(timeout)
     }
-  }, [initialLoadDone])
+  }, [])
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({

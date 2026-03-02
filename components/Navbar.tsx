@@ -3,11 +3,14 @@
 import Link from 'next/link'
 import { Menu, X, BookOpen, LogIn, LogOut, LayoutDashboard, User, Shield } from 'lucide-react'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
   const { user, profile, loading, isAdmin, signOut } = useAuth()
+  const router = useRouter()
 
   const navItems = [
     { name: '首頁', href: '/' },
@@ -18,8 +21,11 @@ export default function Navbar() {
   ]
 
   const handleSignOut = async () => {
+    setIsSigningOut(true)
     await signOut()
     setIsOpen(false)
+    setIsSigningOut(false)
+    router.push('/')
   }
 
   // 取得顯示名稱
@@ -95,9 +101,17 @@ export default function Navbar() {
                 {/* 登出 */}
                 <button
                   onClick={handleSignOut}
-                  className="relative group p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors"
+                  disabled={isSigningOut}
+                  className="relative group p-2 border-2 border-black hover:bg-black hover:text-paper transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <LogOut className="w-4 h-4" strokeWidth={1.5} />
+                  {isSigningOut ? (
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <LogOut className="w-4 h-4" strokeWidth={1.5} />
+                  )}
                   <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black text-paper text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     登出
                   </span>
@@ -206,10 +220,18 @@ export default function Navbar() {
                 
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 border-black hover:bg-black hover:text-paper transition-colors"
+                  disabled={isSigningOut}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-sm uppercase tracking-wider font-medium border-2 border-black hover:bg-black hover:text-paper transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <LogOut className="w-4 h-4" strokeWidth={1.5} />
-                  登出
+                  {isSigningOut ? (
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <LogOut className="w-4 h-4" strokeWidth={1.5} />
+                  )}
+                  {isSigningOut ? '登出中...' : '登出'}
                 </button>
               </>
             )}
