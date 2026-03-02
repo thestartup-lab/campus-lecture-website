@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
       .from('newsletter_subscribers')
-      .select('id, email, created_at')
+      .select('id, email, name, organization, created_at')
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -26,7 +26,11 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { emails } = body as { emails: string[] }
+    const { emails, name, organization } = body as {
+      emails: string[]
+      name?: string
+      organization?: string
+    }
 
     if (!emails || !Array.isArray(emails) || emails.length === 0) {
       return NextResponse.json({ success: false, error: '請提供至少一個 Email' }, { status: 400 })
@@ -52,9 +56,15 @@ export async function POST(request: NextRequest) {
     const skipped = validEmails.length - newEmails.length
 
     if (newEmails.length > 0) {
+      const rows = newEmails.map((email) => ({
+        email,
+        name: name?.trim() || null,
+        organization: organization?.trim() || null,
+      }))
+
       const { error } = await supabaseAdmin
         .from('newsletter_subscribers')
-        .insert(newEmails.map((email) => ({ email })))
+        .insert(rows)
 
       if (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 })
@@ -62,6 +72,41 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, inserted: newEmails.length, skipped })
+  } catch (error) {
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : '未知錯誤',
+    }, { status: 500 })
+  }
+}
+
+// 更新訂閱者的姓名與學校/單位
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { id, name, organization } = body as {
+      id: string
+      name?: string
+      organization?: string
+    }
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: '缺少 id 參數' }, { status: 400 })
+    }
+
+    const { error } = await supabaseAdmin
+      .from('newsletter_subscribers')
+      .update({
+        name: name?.trim() ?? null,
+        organization: organization?.trim() ?? null,
+      })
+      .eq('id', id)
+
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, message: '訂閱者資料已更新' })
   } catch (error) {
     return NextResponse.json({
       success: false,

@@ -137,10 +137,21 @@ export default function AdminPage() {
   } | null>(null)
 
   // 訂閱者管理
-  const [subscribers, setSubscribers] = useState<{ id: string; email: string; created_at: string }[]>([])
+  const [subscribers, setSubscribers] = useState<{
+    id: string
+    email: string
+    name: string | null
+    organization: string | null
+    created_at: string
+  }[]>([])
   const [loadingSubscribers, setLoadingSubscribers] = useState(false)
   const [manualEmail, setManualEmail] = useState('')
+  const [manualName, setManualName] = useState('')
+  const [manualOrganization, setManualOrganization] = useState('')
   const [addingEmail, setAddingEmail] = useState(false)
+  // inline 編輯訂閱者
+  const [inlineEdit, setInlineEdit] = useState<Record<string, { name: string; organization: string }>>({})
+  const [savingSubscriberId, setSavingSubscriberId] = useState<string | null>(null)
   const [csvEmails, setCsvEmails] = useState<string[]>([])
   const [csvFilename, setCsvFilename] = useState('')
   const [importingCsv, setImportingCsv] = useState(false)
@@ -305,13 +316,19 @@ export default function AdminPage() {
       const res = await fetch('/api/subscribers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emails: [manualEmail.trim()] }),
+        body: JSON.stringify({
+          emails: [manualEmail.trim()],
+          name: manualName.trim() || undefined,
+          organization: manualOrganization.trim() || undefined,
+        }),
       })
       const data = await res.json()
       if (data.success) {
         if (data.inserted > 0) {
           alert('已新增訂閱者')
           setManualEmail('')
+          setManualName('')
+          setManualOrganization('')
           fetchSubscribers()
         } else {
           alert('此 Email 已在訂閱名單中')
@@ -323,6 +340,33 @@ export default function AdminPage() {
       alert('新增時發生錯誤')
     }
     setAddingEmail(false)
+  }
+
+  // 更新訂閱者姓名與學校/單位
+  const handleUpdateSubscriber = async (id: string) => {
+    const edit = inlineEdit[id]
+    if (!edit) return
+    setSavingSubscriberId(id)
+    try {
+      const res = await fetch('/api/subscribers', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          name: edit.name || undefined,
+          organization: edit.organization || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!data.success) {
+        alert(`更新失敗：${data.error}`)
+      } else {
+        fetchSubscribers()
+      }
+    } catch {
+      alert('更新時發生錯誤')
+    }
+    setSavingSubscriberId(null)
   }
 
   // 解析 CSV 檔案
@@ -1065,23 +1109,39 @@ export default function AdminPage() {
           {/* 手動新增 */}
           <div>
             <h3 className="font-semibold mb-2">手動新增訂閱者</h3>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
               <input
                 type="email"
-                className="flex-1 border-2 border-black px-3 py-2 text-sm focus:outline-none"
-                placeholder="輸入 Email"
+                className="border-2 border-black px-3 py-2 text-sm focus:outline-none"
+                placeholder="Email *"
                 value={manualEmail}
                 onChange={(e) => setManualEmail(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddEmail()}
               />
-              <button
-                onClick={handleAddEmail}
-                disabled={addingEmail || !manualEmail.trim()}
-                className="btn-editorial px-4 py-2 text-sm disabled:opacity-50"
-              >
-                {addingEmail ? '新增中...' : '新增'}
-              </button>
+              <input
+                type="text"
+                className="border-2 border-black px-3 py-2 text-sm focus:outline-none"
+                placeholder="姓名（選填）"
+                value={manualName}
+                onChange={(e) => setManualName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddEmail()}
+              />
+              <input
+                type="text"
+                className="border-2 border-black px-3 py-2 text-sm focus:outline-none"
+                placeholder="學校/單位（選填）"
+                value={manualOrganization}
+                onChange={(e) => setManualOrganization(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddEmail()}
+              />
             </div>
+            <button
+              onClick={handleAddEmail}
+              disabled={addingEmail || !manualEmail.trim()}
+              className="btn-editorial px-4 py-2 text-sm disabled:opacity-50"
+            >
+              {addingEmail ? '新增中...' : '新增'}
+            </button>
           </div>
 
           {/* CSV 匯入 */}
@@ -1120,39 +1180,85 @@ export default function AdminPage() {
           {/* 訂閱者列表 */}
           <div>
             <h3 className="font-semibold mb-2">訂閱者列表</h3>
+            <p className="text-xs text-gray-500 mb-2">點擊姓名或學校/單位欄位可直接編輯，離開欄位後自動儲存</p>
             {loadingSubscribers ? (
               <p className="text-sm text-gray-500">載入中...</p>
             ) : subscribers.length === 0 ? (
               <p className="text-sm text-gray-500">尚無訂閱者</p>
             ) : (
               <div className="border-2 border-black overflow-hidden">
-                <div className="overflow-y-auto max-h-72">
+                <div className="overflow-y-auto max-h-96">
                   <table className="w-full text-sm">
                     <thead className="bg-black text-white">
                       <tr>
                         <th className="text-left px-4 py-2 font-medium">Email</th>
+                        <th className="text-left px-4 py-2 font-medium">姓名</th>
+                        <th className="text-left px-4 py-2 font-medium">學校/單位</th>
                         <th className="text-left px-4 py-2 font-medium">訂閱日期</th>
                         <th className="px-4 py-2"></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {subscribers.map((sub, idx) => (
-                        <tr key={sub.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                          <td className="px-4 py-2">{sub.email}</td>
-                          <td className="px-4 py-2 text-gray-500">
-                            {new Date(sub.created_at).toLocaleDateString('zh-TW')}
-                          </td>
-                          <td className="px-4 py-2 text-right">
-                            <button
-                              onClick={() => handleDeleteSubscriber(sub.id, sub.email)}
-                              disabled={deletingSubscriberId === sub.id}
-                              className="text-red-500 hover:text-red-700 text-xs disabled:opacity-40"
-                            >
-                              {deletingSubscriberId === sub.id ? '刪除中...' : '移除'}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {subscribers.map((sub, idx) => {
+                        const edit = inlineEdit[sub.id] ?? {
+                          name: sub.name ?? '',
+                          organization: sub.organization ?? '',
+                        }
+                        const isSaving = savingSubscriberId === sub.id
+                        return (
+                          <tr key={sub.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="px-4 py-2 font-mono text-xs">{sub.email}</td>
+                            <td className="px-2 py-1">
+                              <input
+                                type="text"
+                                className="w-full min-w-[80px] border border-transparent hover:border-gray-300 focus:border-black px-2 py-1 text-sm bg-transparent focus:outline-none focus:bg-white rounded"
+                                placeholder="未填寫"
+                                value={edit.name}
+                                disabled={isSaving}
+                                onChange={(e) =>
+                                  setInlineEdit((prev) => ({
+                                    ...prev,
+                                    [sub.id]: { ...edit, name: e.target.value },
+                                  }))
+                                }
+                                onBlur={() => handleUpdateSubscriber(sub.id)}
+                              />
+                            </td>
+                            <td className="px-2 py-1">
+                              <input
+                                type="text"
+                                className="w-full min-w-[100px] border border-transparent hover:border-gray-300 focus:border-black px-2 py-1 text-sm bg-transparent focus:outline-none focus:bg-white rounded"
+                                placeholder="未填寫"
+                                value={edit.organization}
+                                disabled={isSaving}
+                                onChange={(e) =>
+                                  setInlineEdit((prev) => ({
+                                    ...prev,
+                                    [sub.id]: { ...edit, organization: e.target.value },
+                                  }))
+                                }
+                                onBlur={() => handleUpdateSubscriber(sub.id)}
+                              />
+                            </td>
+                            <td className="px-4 py-2 text-gray-500 whitespace-nowrap">
+                              {new Date(sub.created_at).toLocaleDateString('zh-TW')}
+                            </td>
+                            <td className="px-4 py-2 text-right whitespace-nowrap">
+                              {isSaving ? (
+                                <span className="text-xs text-gray-400">儲存中...</span>
+                              ) : (
+                                <button
+                                  onClick={() => handleDeleteSubscriber(sub.id, sub.email)}
+                                  disabled={deletingSubscriberId === sub.id}
+                                  className="text-red-500 hover:text-red-700 text-xs disabled:opacity-40"
+                                >
+                                  {deletingSubscriberId === sub.id ? '刪除中...' : '移除'}
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1274,7 +1380,14 @@ export default function AdminPage() {
                             className="cursor-pointer"
                           />
                         </td>
-                        <td className="px-3 py-2">{sub.email}</td>
+                        <td className="px-3 py-2">
+                          <span>{sub.email}</span>
+                          {(sub.name || sub.organization) && (
+                            <span className="ml-2 text-xs text-gray-400">
+                              {[sub.name, sub.organization].filter(Boolean).join(' · ')}
+                            </span>
+                          )}
+                        </td>
                         <td className="px-3 py-2 text-right text-xs text-gray-400">
                           {new Date(sub.created_at).toLocaleDateString('zh-TW')}
                         </td>
