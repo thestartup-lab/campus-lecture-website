@@ -75,8 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [initialLoadDone, setInitialLoadDone] = useState(false)
 
-  // 獲取用戶 profile
-  const fetchProfile = async (userId: string): Promise<Profile | null> => {
+  // 獲取用戶 profile（含 AbortError 自動重試）
+  const fetchProfile = async (userId: string, retries = 3): Promise<Profile | null> => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -85,12 +85,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single()
 
       if (error) {
-        // 如果是 RLS 錯誤或找不到資料，不顯示錯誤
+        // AbortError：auth session 切換時 Supabase SDK 會中止請求，等待後重試
+        const isAbort = error.message?.toLowerCase().includes('abort')
+        if (isAbort && retries > 0) {
+          // #region agent log
+          fetch('http://127.0.0.1:7600/ingest/f4f4411e-82a1-47a2-9ba9-1782637baec9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'86a0cc'},body:JSON.stringify({sessionId:'86a0cc',location:'AuthContext.tsx:fetchProfile-retry',message:'AbortError retry',data:{userId,retriesLeft:retries-1},timestamp:Date.now(),hypothesisId:'C-fix'})}).catch(()=>{});
+          // #endregion
+          await new Promise(r => setTimeout(r, 400))
+          return fetchProfile(userId, retries - 1)
+        }
         if (error.code !== 'PGRST116') {
           console.warn('獲取 profile 警告:', error.message)
         }
         // #region agent log
-        fetch('http://127.0.0.1:7600/ingest/f4f4411e-82a1-47a2-9ba9-1782637baec9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'86a0cc'},body:JSON.stringify({sessionId:'86a0cc',location:'AuthContext.tsx:fetchProfile-error',message:'fetchProfile DB error',data:{code:error.code,msg:error.message,userId},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+        fetch('http://127.0.0.1:7600/ingest/f4f4411e-82a1-47a2-9ba9-1782637baec9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'86a0cc'},body:JSON.stringify({sessionId:'86a0cc',location:'AuthContext.tsx:fetchProfile-error',message:'fetchProfile DB error (no retry)',data:{code:error.code,msg:error.message,userId},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
         // #endregion
         return null
       }
