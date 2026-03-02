@@ -26,7 +26,7 @@ export default function LoginPage() {
     try {
       if (isLogin) {
         // 登入
-        const { error, needsApproval } = await signIn(email, password)
+        const { error, needsApproval, profile } = await signIn(email, password)
         if (error) {
           if (needsApproval) {
             setStatus('pending')
@@ -40,7 +40,7 @@ export default function LoginPage() {
           }
           return
         }
-        router.push('/dashboard')
+        router.push(profile?.role === 'admin' ? '/admin' : '/dashboard')
       } else {
         // 註冊
         if (!fullName.trim()) {

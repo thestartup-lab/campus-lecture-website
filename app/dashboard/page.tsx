@@ -134,7 +134,7 @@ interface FAQInquiry {
 }
 
 export default function DashboardPage() {
-  const { user, profile, loading, refreshProfile } = useAuth()
+  const { user, profile, loading, isAdmin, refreshProfile } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'profile' | 'subscribers' | 'articles' | 'testimonials' | 'lectureRequests' | 'lecturePlans' | 'faqInquiries' | 'siteSettings'>('articles')
   
@@ -236,10 +236,14 @@ export default function DashboardPage() {
 
   // 檢查登入狀態
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login')
+    if (!loading) {
+      if (!user) {
+        router.push('/login')
+      } else if (isAdmin) {
+        router.push('/admin')
+      }
     }
-  }, [user, loading, router])
+  }, [user, loading, isAdmin, router])
 
   // 獲取講座申請（Supabase - 舊版備份）
   const fetchApplications = async () => {
