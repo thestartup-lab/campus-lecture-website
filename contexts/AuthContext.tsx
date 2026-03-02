@@ -89,8 +89,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error.code !== 'PGRST116') {
           console.warn('獲取 profile 警告:', error.message)
         }
+        // #region agent log
+        fetch('http://127.0.0.1:7600/ingest/f4f4411e-82a1-47a2-9ba9-1782637baec9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'86a0cc'},body:JSON.stringify({sessionId:'86a0cc',location:'AuthContext.tsx:fetchProfile-error',message:'fetchProfile DB error',data:{code:error.code,msg:error.message,userId},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         return null
       }
+      // #region agent log
+      fetch('http://127.0.0.1:7600/ingest/f4f4411e-82a1-47a2-9ba9-1782637baec9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'86a0cc'},body:JSON.stringify({sessionId:'86a0cc',location:'AuthContext.tsx:fetchProfile-ok',message:'fetchProfile result',data:{userId,role:data?.role,is_approved:data?.is_approved},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
       return data as Profile
     } catch (err) {
       console.warn('獲取 profile 時發生錯誤')
@@ -110,6 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 初始化：先從快取讀取
   useEffect(() => {
     const cachedProfile = getCachedProfile()
+    // #region agent log
+    fetch('http://127.0.0.1:7600/ingest/f4f4411e-82a1-47a2-9ba9-1782637baec9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'86a0cc'},body:JSON.stringify({sessionId:'86a0cc',location:'AuthContext.tsx:cache-init',message:'localStorage cache read',data:{hasCachedProfile:!!cachedProfile,cachedRole:cachedProfile?.role,cachedId:cachedProfile?.id},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     if (cachedProfile) {
       setProfile(cachedProfile)
       // 如果有快取，先結束 loading 狀態
@@ -163,6 +172,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         if (session?.user) {
           const fetchedProfile = await fetchProfile(session.user.id)
+          // #region agent log
+          fetch('http://127.0.0.1:7600/ingest/f4f4411e-82a1-47a2-9ba9-1782637baec9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'86a0cc'},body:JSON.stringify({sessionId:'86a0cc',location:'AuthContext.tsx:onAuthStateChange',message:'onAuthStateChange profile fetch',data:{event,userId:session.user.id,role:fetchedProfile?.role,isNull:fetchedProfile===null},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+          // #endregion
           setProfile(fetchedProfile)
           setCachedProfile(fetchedProfile)
         } else {
