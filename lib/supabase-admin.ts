@@ -1,13 +1,23 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+// 延遲初始化：建置時不執行 createClient，避免缺少環境變數導致 build 失敗
+let _adminClient: SupabaseClient | null = null
 
-// 使用 Service Role Key 的管理員客戶端（繞過 RLS）
-// 僅在伺服器端使用！
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
+function getAdminClient(): SupabaseClient {
+  if (!_adminClient) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    _adminClient = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
   }
+  return _adminClient
+}
+
+// 使用 Proxy 保持與既有程式碼相容（supabaseAdmin.from(...) 等用法不變）
+// 僅在伺服器端使用！
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(_, prop: string) {
+    return (getAdminClient() as unknown as Record<string, unknown>)[prop]
+  },
 })
