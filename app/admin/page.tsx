@@ -240,9 +240,6 @@ export default function AdminPage() {
 
   // 檢查權限
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7600/ingest/f4f4411e-82a1-47a2-9ba9-1782637baec9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c430c2'},body:JSON.stringify({sessionId:'c430c2',location:'admin/page.tsx:permissionCheck',message:'admin permission check',data:{loading,hasUser:!!user,userId:user?.id,userEmail:user?.email,profileRole:profile?.role,profileIsApproved:profile?.is_approved,isAdmin},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
     if (!loading) {
       if (!user) {
         router.push('/login')
