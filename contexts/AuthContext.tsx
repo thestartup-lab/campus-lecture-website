@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // #endregion
       } else {
         // #region agent log
-        fetch('http://127.0.0.1:7600/ingest/f4f4411e-82a1-47a2-9ba9-1782637baec9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c430c2'},body:JSON.stringify({sessionId:'c430c2',location:'AuthContext.tsx:fetchProfile',message:'profile fetch returned null',data:{userId,errorCode:error?.code,errorMsg:error?.message},timestamp:Date.now()})}).catch(()=>{})
+        fetch('http://127.0.0.1:7600/ingest/f4f4411e-82a1-47a2-9ba9-1782637baec9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'c430c2'},body:JSON.stringify({sessionId:'c430c2',location:'AuthContext.tsx:fetchProfile',message:'profile fetch returned null',data:{userId},timestamp:Date.now()})}).catch(()=>{})
         // #endregion
       }
       return data as Profile
