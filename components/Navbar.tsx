@@ -22,9 +22,15 @@ export default function Navbar() {
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
+    // #region agent log
+    fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'Navbar.tsx:handleSignOut-start',message:'handleSignOut called',data:{},timestamp:Date.now(),hypothesisId:'A/C'})}).catch(()=>{});
+    // #endregion
     await signOut()
     setIsOpen(false)
     setIsSigningOut(false)
+    // #region agent log
+    fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'Navbar.tsx:handleSignOut-before-push',message:'about to router.push(/)',data:{},timestamp:Date.now(),hypothesisId:'A/C'})}).catch(()=>{});
+    // #endregion
     router.push('/')
   }
 

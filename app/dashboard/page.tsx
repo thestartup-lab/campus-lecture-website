@@ -134,7 +134,7 @@ interface FAQInquiry {
 }
 
 export default function DashboardPage() {
-  const { user, profile, loading, refreshProfile } = useAuth()
+  const { user, profile, loading, signingOut, refreshProfile } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'profile' | 'subscribers' | 'articles' | 'testimonials' | 'lectureRequests' | 'lecturePlans' | 'faqInquiries' | 'siteSettings'>('articles')
   
@@ -236,10 +236,16 @@ export default function DashboardPage() {
 
   // 檢查登入狀態
   useEffect(() => {
-    if (!loading && !user) {
+    // #region agent log
+    fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'dashboard/page.tsx:authEffect',message:'auth effect triggered',data:{loading,hasUser:!!user,signingOut},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+    if (!loading && !user && !signingOut) {
+      // #region agent log
+      fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'dashboard/page.tsx:redirectToLogin',message:'no user => pushing to /login',data:{},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       router.push('/login')
     }
-  }, [user, loading, router])
+  }, [user, loading, signingOut, router])
 
   // 獲取講座申請（Supabase - 舊版備份）
   const fetchApplications = async () => {
@@ -1389,8 +1395,8 @@ export default function DashboardPage() {
     )
   }
 
-  // 如果正在載入，顯示載入畫面
-  if (loading) {
+  // 如果正在載入，顯示載入畫面（登出中不顯示，避免卡圈）
+  if (loading && !signingOut) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center">
         <div className="text-center">

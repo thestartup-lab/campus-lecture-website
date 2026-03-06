@@ -18,6 +18,7 @@ interface AuthContextType {
   profile: Profile | null
   session: Session | null
   loading: boolean
+  signingOut: boolean
   isAdmin: boolean
   isApproved: boolean
   signIn: (email: string, password: string) => Promise<{ error: Error | null; needsApproval?: boolean; profile?: Profile | null }>
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [signingOut, setSigningOut] = useState(false)
 
   // 追蹤最新 profile 供 onAuthStateChange 閉包使用
   const profileRef = useRef<Profile | null>(null)
@@ -123,6 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 避免同時跑 getSession() + onAuthStateChange 造成 race condition
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'AuthContext.tsx:onAuthStateChange',message:'onAuthStateChange fired',data:{event,userId:session?.user?.email??null},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
         setSession(session)
         setUser(session?.user ?? null)
 
@@ -220,12 +225,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'AuthContext.tsx:signOut-start',message:'signOut called - before supabase.auth.signOut',data:{loading,user:user?.email},timestamp:Date.now(),hypothesisId:'A/B'})}).catch(()=>{});
+    // #endregion
+    setSigningOut(true)
     await supabase.auth.signOut()
+    // #region agent log
+    fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'AuthContext.tsx:signOut-after',message:'signOut done - after supabase.auth.signOut',data:{},timestamp:Date.now(),hypothesisId:'A/B'})}).catch(()=>{});
+    // #endregion
     setUser(null)
     setProfile(null)
     profileRef.current = null
     setSession(null)
     setCachedProfile(null)
+    setSigningOut(false)
   }
 
   const isAdmin = profile?.role === 'admin'
@@ -237,6 +250,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       session,
       loading,
+      signingOut,
       isAdmin,
       isApproved,
       signIn,
