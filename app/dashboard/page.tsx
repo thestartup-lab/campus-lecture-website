@@ -236,13 +236,7 @@ export default function DashboardPage() {
 
   // 檢查登入狀態
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'dashboard/page.tsx:authEffect',message:'auth effect triggered',data:{loading,hasUser:!!user,signingOut},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
     if (!loading && !user && !signingOut) {
-      // #region agent log
-      fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'dashboard/page.tsx:redirectToLogin',message:'no user => pushing to /login',data:{},timestamp:Date.now(),hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       router.push('/login')
     }
   }, [user, loading, signingOut, router])

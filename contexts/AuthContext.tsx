@@ -125,9 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 避免同時跑 getSession() + onAuthStateChange 造成 race condition
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'AuthContext.tsx:onAuthStateChange',message:'onAuthStateChange fired',data:{event,userId:session?.user?.email??null},timestamp:Date.now(),hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         setSession(session)
         setUser(session?.user ?? null)
 
@@ -185,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(fetchedProfile)
       profileRef.current = fetchedProfile
       setCachedProfile(fetchedProfile)
+      setLoading(false)
       return { error: null, profile: fetchedProfile }
     }
 
@@ -225,14 +223,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'AuthContext.tsx:signOut-start',message:'signOut called - before supabase.auth.signOut',data:{loading,user:user?.email},timestamp:Date.now(),hypothesisId:'A/B'})}).catch(()=>{});
-    // #endregion
     setSigningOut(true)
     await supabase.auth.signOut()
-    // #region agent log
-    fetch('http://127.0.0.1:7600/ingest/7c414af8-f5c6-43a4-a102-831bd7ac115e',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f775bd'},body:JSON.stringify({sessionId:'f775bd',location:'AuthContext.tsx:signOut-after',message:'signOut done - after supabase.auth.signOut',data:{},timestamp:Date.now(),hypothesisId:'A/B'})}).catch(()=>{});
-    // #endregion
     setUser(null)
     setProfile(null)
     profileRef.current = null

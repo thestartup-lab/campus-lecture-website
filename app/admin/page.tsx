@@ -57,7 +57,7 @@ interface Instructor {
 }
 
 export default function AdminPage() {
-  const { user, profile, loading, isAdmin } = useAuth()
+  const { user, profile, loading, isAdmin, signingOut } = useAuth()
   const router = useRouter()
   const [instructors, setInstructors] = useState<Instructor[]>([])
   const [loadingData, setLoadingData] = useState(true)
@@ -240,14 +240,14 @@ export default function AdminPage() {
 
   // 檢查權限
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !signingOut) {
       if (!user) {
         router.push('/login')
       } else if (!isAdmin) {
         router.push('/dashboard')
       }
     }
-  }, [user, loading, isAdmin, router])
+  }, [user, loading, signingOut, isAdmin, router])
 
   // 獲取所有講師
   const fetchInstructors = async () => {
@@ -815,7 +815,7 @@ export default function AdminPage() {
   }
 
   // 載入中
-  if (loading) {
+  if (loading && !signingOut) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center">
         <div className="text-center">

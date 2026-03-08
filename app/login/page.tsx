@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock, User, Eye, EyeOff, LogIn, UserPlus, Clock, ArrowLeft } from 'lucide-react'
@@ -16,7 +16,14 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   
   const router = useRouter()
-  const { signIn, signUp } = useAuth()
+  const { signIn, signUp, user, profile, loading } = useAuth()
+
+  // 已登入者自動跳轉，避免停留在登入頁
+  useEffect(() => {
+    if (!loading && user) {
+      router.push(profile?.role === 'admin' ? '/admin' : '/dashboard')
+    }
+  }, [user, profile, loading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,6 +47,7 @@ export default function LoginPage() {
           }
           return
         }
+        setStatus('idle')
         router.push(profile?.role === 'admin' ? '/admin' : '/dashboard')
       } else {
         // 註冊
