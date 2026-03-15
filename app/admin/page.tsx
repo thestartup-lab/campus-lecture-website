@@ -110,6 +110,20 @@ export default function AdminPage() {
   const [newPassword, setNewPassword] = useState('')
   const [resettingPassword, setResettingPassword] = useState(false)
 
+  // 電子報模板
+  const [emailTemplates, setEmailTemplates] = useState<{
+    id: string
+    name: string
+    subject: string
+    html: string
+    sort_order: number
+  }[]>([])
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
+  const [showTemplateManager, setShowTemplateManager] = useState(false)
+  const [templateForm, setTemplateForm] = useState({ name: '', subject: '', html: '', sort_order: 0 })
+  const [editingTemplate, setEditingTemplate] = useState<string | null>(null)
+  const [savingTemplate, setSavingTemplate] = useState(false)
+
   // 電子報群發
   const [newsletterSubject, setNewsletterSubject] = useState('')
   const [newsletterHtml, setNewsletterHtml] = useState('')
@@ -285,6 +299,60 @@ export default function AdminPage() {
     setLoadingHistory(false)
   }
 
+  const fetchEmailTemplates = async () => {
+    try {
+      const res = await fetch('/api/email-templates')
+      const data = await res.json()
+      if (data.success) setEmailTemplates(data.data)
+    } catch {}
+  }
+
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId)
+    if (!templateId) return
+    const tmpl = emailTemplates.find(t => t.id === templateId)
+    if (tmpl) {
+      setNewsletterSubject(tmpl.subject)
+      setNewsletterHtml(tmpl.html)
+    }
+  }
+
+  const handleTemplateSave = async () => {
+    if (!templateForm.name || !templateForm.subject || !templateForm.html) {
+      alert('請填寫所有必填欄位')
+      return
+    }
+    setSavingTemplate(true)
+    try {
+      const method = editingTemplate ? 'PATCH' : 'POST'
+      const body = editingTemplate
+        ? { id: editingTemplate, ...templateForm }
+        : templateForm
+
+      const res = await fetch('/api/email-templates', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setTemplateForm({ name: '', subject: '', html: '', sort_order: 0 })
+        setEditingTemplate(null)
+        fetchEmailTemplates()
+      } else {
+        alert(data.error ?? '儲存失敗')
+      }
+    } finally {
+      setSavingTemplate(false)
+    }
+  }
+
+  const handleTemplateDelete = async (id: string) => {
+    if (!confirm('確定要刪除此模板嗎？')) return
+    await fetch(`/api/email-templates?id=${id}`, { method: 'DELETE' })
+    fetchEmailTemplates()
+  }
+
   const fetchSubscribers = async () => {
     setLoadingSubscribers(true)
     try {
@@ -305,6 +373,7 @@ export default function AdminPage() {
       fetchInstructors()
       fetchSubscribers()
       fetchNewsletterHistory()
+      fetchEmailTemplates()
     }
   }, [user, isAdmin])
 
@@ -1285,8 +1354,14 @@ export default function AdminPage() {
           </div>
           <div className="flex gap-2">
             <button
+              onClick={() => setShowTemplateManager(!showTemplateManager)}
+              className={`px-3 py-1.5 text-xs font-medium border-2 border-black transition-colors ${showTemplateManager ? 'bg-black text-paper' : 'bg-paper text-black hover:bg-paper-dark'}`}
+            >
+              模板管理
+            </button>
+            <button
               onClick={() => setNewsletterPreview(false)}
-              className={`px-3 py-1.5 text-xs font-medium border-2 border-black transition-colors ${!newsletterPreview ? 'bg-black text-paper' : 'bg-paper text-black hover:bg-paper-dark'}`}
+              className={`px-3 py-1.5 text-xs font-medium border-2 border-black transition-colors ${!newsletterPreview && !showTemplateManager ? 'bg-black text-paper' : 'bg-paper text-black hover:bg-paper-dark'}`}
             >
               編輯
             </button>
@@ -1299,7 +1374,133 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* 模板管理區塊 */}
+        {showTemplateManager && (
+          <div className="p-6 border-b-2 border-black bg-gray-50">
+            <h3 className="font-bold text-sm uppercase tracking-wider mb-4">公版模板管理</h3>
+
+            {/* 模板列表 */}
+            <div className="space-y-2 mb-6">
+              {emailTemplates.length === 0 ? (
+                <p className="text-sm text-ink-muted">尚無模板</p>
+              ) : (
+                emailTemplates.map(t => (
+                  <div key={t.id} className="flex items-center justify-between bg-white border-2 border-black px-4 py-2">
+                    <div>
+                      <span className="font-medium text-sm">{t.name}</span>
+                      <span className="ml-2 text-xs text-ink-muted">主旨：{t.subject}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingTemplate(t.id)
+                          setTemplateForm({ name: t.name, subject: t.subject, html: t.html, sort_order: t.sort_order })
+                        }}
+                        className="text-xs underline text-black hover:opacity-60"
+                      >
+                        編輯
+                      </button>
+                      <button
+                        onClick={() => handleTemplateDelete(t.id)}
+                        className="text-xs underline text-red-600 hover:opacity-60"
+                      >
+                        刪除
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* 新增/編輯表單 */}
+            <div className="border-2 border-black bg-white p-4 space-y-3">
+              <h4 className="font-bold text-sm">{editingTemplate ? '編輯模板' : '新增模板'}</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium uppercase tracking-wider mb-1">模板名稱 *</label>
+                  <input
+                    type="text"
+                    value={templateForm.name}
+                    onChange={e => setTemplateForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="例：合作邀請函"
+                    className="input-editorial w-full text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium uppercase tracking-wider mb-1">排序</label>
+                  <input
+                    type="number"
+                    value={templateForm.sort_order}
+                    onChange={e => setTemplateForm(f => ({ ...f, sort_order: Number(e.target.value) }))}
+                    className="input-editorial w-full text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium uppercase tracking-wider mb-1">主旨 *</label>
+                <input
+                  type="text"
+                  value={templateForm.subject}
+                  onChange={e => setTemplateForm(f => ({ ...f, subject: e.target.value }))}
+                  placeholder="信件主旨"
+                  className="input-editorial w-full text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium uppercase tracking-wider mb-1">HTML 內容 *</label>
+                <textarea
+                  value={templateForm.html}
+                  onChange={e => setTemplateForm(f => ({ ...f, html: e.target.value }))}
+                  placeholder="<p>親愛的承辦人您好，...</p>"
+                  rows={8}
+                  className="input-editorial w-full font-mono text-xs resize-y"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleTemplateSave}
+                  disabled={savingTemplate}
+                  className="btn-editorial disabled:opacity-50"
+                >
+                  {savingTemplate ? '儲存中...' : editingTemplate ? '更新模板' : '新增模板'}
+                </button>
+                {editingTemplate && (
+                  <button
+                    onClick={() => { setEditingTemplate(null); setTemplateForm({ name: '', subject: '', html: '', sort_order: 0 }) }}
+                    className="px-4 py-2 border-2 border-black text-sm font-medium hover:bg-gray-50"
+                  >
+                    取消
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="p-6 space-y-4">
+          {/* 選擇模板 */}
+          {emailTemplates.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">套用公版模板</label>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => { setSelectedTemplateId(''); setNewsletterSubject(''); setNewsletterHtml('') }}
+                  className={`px-3 py-1.5 text-xs font-medium border-2 border-black transition-colors ${!selectedTemplateId ? 'bg-black text-paper' : 'bg-paper text-black hover:bg-paper-dark'}`}
+                >
+                  自訂
+                </button>
+                {emailTemplates.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => handleTemplateSelect(t.id)}
+                    className={`px-3 py-1.5 text-xs font-medium border-2 border-black transition-colors ${selectedTemplateId === t.id ? 'bg-black text-paper' : 'bg-paper text-black hover:bg-paper-dark'}`}
+                  >
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium uppercase tracking-wider text-black mb-2">主旨</label>
             <input
